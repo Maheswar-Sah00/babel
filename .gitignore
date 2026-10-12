@@ -1,0 +1,25 @@
+# Secrets: keys live only in .env (template: .env.example)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Local data: every API response (large, private, never published)
+/cache/
+/spike/raw/
+# Precomputed runtime data (tools/build_runtime.py): Qloo-derived, private like cache/
+/data/runtime/
+
+# Abandoned Crossover experiments: kept locally, not published (docs/DECISIONS.md, section 9)
+/spike/
+
+# Python and tooling
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+node_modules/
+.DS_Store
+Thumbs.db

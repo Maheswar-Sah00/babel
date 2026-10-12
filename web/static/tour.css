@@ -1,0 +1,75 @@
+/* Guided walkthrough (static/tour.js): the nav button, the first-visit invitation, the spotlight and the popover.
+   Tokens come from app.css. The layer sits above the assistant (z-index 60) and lets clicks through to the page;
+   only the popover takes the pointer. Dark theme: the --tour-* tokens below (screen only, like app.css). */
+:root {
+  --tour-dim: rgba(18, 24, 28, .46);       /* the page around the spotlight */
+  --tour-dim-soft: rgba(18, 24, 28, .18);  /* inside a dialog, whose backdrop already dims */
+  --tour-halo: rgba(255, 255, 255, .7);    /* between the blue ring and the dim */
+  --tour-edge: rgba(18, 24, 28, .04);
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --tour-dim: rgba(0, 0, 0, .6);
+    --tour-dim-soft: rgba(0, 0, 0, .3);
+    --tour-halo: rgba(10, 10, 10, .85);    /* between the white ring and the dim */
+    --tour-edge: rgba(255, 255, 255, .06);
+  }
+  :root[data-theme="dark"] .tour-pop { border-color: var(--line-2); }
+}
+
+/* "Take the tour" in the nav is styled with the other nav links (app.css, .nav-link). */
+
+/* ---------------------------------------------------------------- the first-visit invitation (in the hero) */
+.tour-invite { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px 10px; width: fit-content;
+  max-width: 100%; margin: 22px auto 0; padding: 4px 4px 4px 14px; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--surface-2); font-size: 14px; color: var(--ink-2); }
+.tour-invite-start { font-size: 14px; }
+.tour-invite-close { display: inline-grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 50%;
+  background: none; color: var(--ink-3); font-size: 18px; line-height: 1; cursor: pointer; }
+.tour-invite-close:hover { background: var(--line); color: var(--ink); }
+html.tour-on .tour-invite { display: none; }
+
+/* ---------------------------------------------------------------- the layer, spotlight and popover */
+.tour-layer { position: fixed; inset: 0; z-index: 90; overflow: hidden; pointer-events: none; }
+.tour-spot { position: absolute; border-radius: 14px; pointer-events: none;
+  box-shadow: 0 0 0 3px var(--blue), 0 0 0 4px var(--tour-halo), 0 0 0 200vmax var(--tour-dim); }
+.tour-spot.is-none { box-shadow: 0 0 0 200vmax var(--tour-dim); }
+/* inside a modal dialog its own backdrop already dims the page: add a little, to match the other steps */
+.tour-layer.is-in-dialog .tour-spot { box-shadow: 0 0 0 3px var(--blue), 0 0 0 4px var(--tour-halo),
+  0 0 0 200vmax var(--tour-dim-soft); }
+.tour-layer.is-in-dialog .tour-spot.is-none { box-shadow: 0 0 0 200vmax var(--tour-dim-soft); }
+.tour-layer.is-moving .tour-spot { transition: top .3s ease, left .3s ease, width .3s ease, height .3s ease; }
+
+.tour-pop { position: absolute; top: 0; left: 0; width: min(370px, calc(100vw - 24px)); max-height: calc(100vh - 24px);
+  max-height: calc(100dvh - 24px); overflow: auto; padding: 18px 20px 16px; pointer-events: auto;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow-lift), 0 0 0 1px var(--tour-edge); font: 400 15px/1.5 var(--font-body); text-align: left; }
+.tour-pop.is-in { animation: tour-in .22s ease-out; }
+@keyframes tour-in { from { opacity: 0; transform: translateY(6px); } }
+.tour-count { margin: 0 0 6px; font-size: 12.5px; font-weight: 600; letter-spacing: .02em; color: var(--blue); }
+.tour-title { margin: 0; font: 400 24px/1.15 var(--font-display); letter-spacing: -0.02em; color: var(--ink); }
+.tour-body { margin: 8px 0 0; font-size: 15px; line-height: 1.5; color: var(--ink-2); }
+.tour-note { margin: 8px 0 0; font-size: 13.5px; line-height: 1.45; color: var(--ink-3); }
+.tour-status { display: flex; align-items: center; gap: 8px; margin: 10px 0 0; font-size: 13.5px; color: var(--ink-2); }
+.tour-status .spinner { flex: none; color: var(--blue); }
+.tour-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 12px; margin-top: 16px; }
+.tour-nav { display: flex; gap: 8px; margin-left: auto; }
+.tour-skip { font-size: 14px; color: var(--ink-3); }
+.tour-skip:hover { color: var(--ink); }
+.tour-pop .button[aria-disabled="true"] { cursor: progress; }
+.tour-layer[data-state="error"] .tour-count { color: var(--bad); }
+
+/* ---------------------------------------------------------------- phones */
+@media (max-width: 680px) {
+  .tour-pop { padding: 16px 16px 14px; }
+  .tour-title { font-size: 22px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-pop.is-in { animation: none; }
+  .tour-layer.is-moving .tour-spot { transition: none; }
+}
+@media (forced-colors: active) {
+  .tour-spot { outline: 3px solid Highlight; }
+  .tour-pop { border: 2px solid CanvasText; }
+}

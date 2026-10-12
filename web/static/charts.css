@@ -1,0 +1,92 @@
+/* "Your plan at a glance" (static/charts.js). Marks use the plan's shared tokens (--plan-translate, --plan-store,
+   --plan-skip, --plan-supported in app.css), so the charts follow the theme without a redraw. The Qloo adjustment
+   arms are mapdata.js's validated diverging ends: light blue #1c5cab / red #b3302c (adjacent CVD dE 25.6);
+   dark: near-white #e2e2e2 / light red #ec9890 (the monochrome dark theme: no blue). Text always wears ink tokens. */
+:root {
+  --chart-more: #1c5cab;
+  --chart-fewer: #b3302c;
+  --chart-left: #e3e8e8;
+  --chart-on-translate: #ffffff;   /* 4.6:1 on #2a78d6 */
+  --chart-on-store: #12181c;       /* 6.0:1 on #eb6834 */
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --chart-more: #e2e2e2;
+    --chart-fewer: #ec9890;
+    --chart-left: #2a2a2a;
+    --chart-on-translate: #0a0a0a; /* on #e8e8e8 */
+    --chart-on-store: #0a0a0a;     /* on #d95926: 5.6:1 */
+  }
+}
+
+.glance .glance-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 8px 24px; }
+.chart-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 18px; }
+@media (max-width: 900px) { .chart-grid { grid-template-columns: minmax(0, 1fr); } }
+
+.chart-card { position: relative; min-width: 0; display: flex; flex-direction: column; gap: 8px; padding: 18px 18px 16px;
+  border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+.chart-title { margin: 0; font-size: 17px; font-weight: 600; }
+.chart-note { margin: 0; }
+.chart-plot { min-width: 0; }
+.chart-svg { display: block; overflow: visible; }
+
+.chart-legend { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 0; padding: 0; list-style: none; font-size: 13px; color: var(--ink-2); }
+.chart-legend li { display: inline-flex; align-items: center; gap: 6px; }
+.chart-legend .key { width: 12px; height: 12px; border-radius: 3px; background: var(--k, var(--plan-skip)); flex: none; }
+.chart-legend .key.key-usual { width: 3px; height: 14px; border-radius: 1px; background: var(--ink); }
+
+/* series colours (fill for marks, --k for legend keys) */
+.mark-translate_game { --k: var(--plan-translate); fill: var(--plan-translate); }
+.mark-store_page_only { --k: var(--plan-store); fill: var(--plan-store); }
+.mark-skip { --k: var(--plan-skip); fill: var(--plan-skip); }
+.mark-already_supported { --k: var(--plan-supported); fill: var(--plan-supported); }
+.mark-more { --k: var(--chart-more); fill: var(--chart-more); }
+.mark-fewer { --k: var(--chart-fewer); fill: var(--chart-fewer); }
+.mark-left { --k: var(--chart-left); fill: var(--chart-left); }
+
+.chart-svg text { font: 500 13px var(--font-body); dominant-baseline: central; }
+.chart-svg .label { fill: var(--ink-2); }
+.chart-svg .value { fill: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.chart-svg .axis { fill: var(--ink-3); font-size: 12px; }
+.chart-svg .axis-head { font-weight: 600; fill: var(--ink-2); }
+.chart-svg .hit { fill: transparent; }
+.chart-svg .row { outline: none; }
+.chart-svg .row.is-hot .hit, .chart-svg .row:focus-visible .hit { fill: var(--surface-2); }
+.chart-svg .row:focus-visible .label { fill: var(--ink); text-decoration: underline; }
+.chart-svg .usual-halo { stroke: var(--surface); stroke-width: 6; stroke-linecap: round; }
+.chart-svg .usual { stroke: var(--ink); stroke-width: 2; stroke-linecap: round; }
+.chart-svg .baseline { stroke: var(--line-2); stroke-width: 1; }
+.chart-svg .spread { stroke: var(--ink-2); stroke-width: 2; stroke-linecap: round; }
+
+/* slope chart: lines that moved 3+ places stand out; the rest recede */
+.chart-svg .slope { stroke-width: 2; stroke: var(--plan-skip); opacity: .35; }
+.chart-svg .slope-translate_game { stroke: var(--plan-translate); }
+.chart-svg .slope-store_page_only { stroke: var(--plan-store); }
+.chart-svg .slope-already_supported { stroke: var(--plan-supported); }
+.chart-svg .row.is-moved .slope { opacity: 1; }
+.chart-svg .row.is-hot .slope, .chart-svg .row:focus-visible .slope { opacity: 1; stroke-width: 3; }
+.chart-svg .row.is-hot .label, .chart-svg .row:focus-visible .label { fill: var(--ink); font-weight: 600; }
+.chart-svg .dot { stroke: var(--surface); stroke-width: 2; }
+.chart-svg .hit-line { stroke: transparent; stroke-width: 14; }
+
+/* budget bar */
+.chart-svg .seg { outline: none; }
+.chart-svg .seg:focus-visible .mark { stroke: var(--ink); stroke-width: 2; }
+.chart-svg .seg-label { font-weight: 600; fill: var(--ink-2); }
+.chart-svg .seg-on-translate_game { fill: var(--chart-on-translate); }
+.chart-svg .seg-on-store_page_only { fill: var(--chart-on-store); }
+.chart-breakdown { display: grid; gap: 6px; margin: 8px 0 0; font-size: 14.5px; }
+.chart-breakdown div { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+.chart-breakdown dt { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-2); }
+.chart-breakdown dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.chart-breakdown .key { width: 12px; height: 12px; border-radius: 3px; background: var(--k); flex: none; }
+.chart-big { margin: 10px 0 0; color: var(--ink-2); }
+.chart-big strong { display: block; font: 400 44px/1.05 var(--font-display); color: var(--ink); letter-spacing: -.02em; }
+
+.chart-tooltip { position: absolute; z-index: 3; display: grid; gap: 2px; max-width: 280px; padding: 9px 12px; border-radius: 10px;
+  pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--line-2); box-shadow: var(--shadow);
+  font-size: 13.5px; line-height: 1.4; }
+.chart-tooltip span:first-child { font-weight: 600; }
+.chart-tooltip .muted { color: var(--ink-2); }
+
+@media print { .glance { break-inside: avoid; } }

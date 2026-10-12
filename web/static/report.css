@@ -1,0 +1,202 @@
+/* The one-page report (report.js). The sheet is laid out at A4 print size: the base rules are the printed page
+   (one A4 page, 9 mm margins), wide screens show the same page enlarged with zoom, and phones get a fluid layout.
+   Tokens come from app.css. Responsive rules say "screen" so they never apply to the printed page.
+   Dark theme: only the surroundings go dark; the sheet is paper and keeps the light colours (what the PDF shows). */
+:root { --r-toolbar: rgba(255, 255, 255, .92); }
+@media screen {
+  :root[data-theme="dark"] { --r-toolbar: rgba(18, 18, 18, .9); }
+  /* The paper: every colour token of app.css at its light value (tests/test_report.py compares the sheet's computed
+     colours in both themes, so a token added to app.css and used on the sheet shows up there). */
+  :root[data-theme="dark"] .report-sheet {
+    --bg: #f1f6f6; --surface: #ffffff; --surface-2: #f7fafa; --ink: #12181c; --ink-2: #48535a; --ink-3: #677278;
+    --line: #e1e8e9; --line-2: #cfd8da; --blue: #2d6cf3; --blue-hover: #1f58d6; --blue-soft: #e8effe;
+    --ok: #1b7a50; --ok-soft: #e4f3ec; --warn: #9a6200; --warn-soft: #fbf1dc; --bad: #b3261e; --bad-soft: #fbe9e7;
+    --accent: #2d6cf3; --accent-hover: #1f58d6; --on-accent: #ffffff; --on-ink: #ffffff;
+    --glass: rgba(255, 255, 255, .86); --backdrop: rgba(18, 24, 28, .35);
+    --shadow: 0 1px 2px rgba(18, 24, 28, .06), 0 8px 24px rgba(18, 24, 28, .07);
+    --shadow-lift: 0 2px 4px rgba(18, 24, 28, .06), 0 18px 40px rgba(18, 24, 28, .12);
+    --blue-ink: #1d4fbf; --ok-line: #c6e5d6; --warn-line: #f0dcb2; --bad-line: #f2c6c1; --blue-line: #cddcfb;
+    --ok-solid: #1b7a50; --blue-solid: #2d6cf3; --bad-solid: #b3261e; --warn-solid: #d89a16; --on-warn-solid: #12181c;
+    --placeholder: #98a2a8; --img-bg: #dde5e7;
+    --map-surface: #fbfcfc; --map-stroke: #ffffff; --map-shimmer: #f3f6f6; --map-hatch-bg: #f4f6f6;
+    --map-hatch-ink: #aab4b8; --map-control: rgba(255, 255, 255, .94); --map-overlay: rgba(255, 255, 255, .97);
+    --map-ring: transparent; --control-shadow: 0 1px 3px rgba(18, 24, 28, .1);
+    --tip-bg: var(--ink); --tip-ink: #ffffff; --tip-muted: #c7d0d4; --tip-hint: #98a9b1;
+    --swatch-ring: rgba(18, 24, 28, .14);
+    --plan-translate: #2a78d6; --plan-store: #eb6834; --plan-skip: #b5bcb9; --plan-supported: #1baf7a;
+    --plan-translate-bg: #f3f7fe; --plan-translate-line: #d9e6fb; --plan-store-bg: #fef7f2; --plan-store-line: #f7dfcf;
+    --skew-pos: #2a78d6; --skew-neg: #ec9890;
+    --src-qloo-bg: #eaf1fe; --src-qloo-ink: #1d4fbf; --src-qloo-line: #d3e1fc; --src-estimate-ink: #7d5200;
+    --src-llm-bg: #f3edfd; --src-llm-ink: #5636a3; --src-llm-line: #e1d3f7; --src-ref-bg: #eef2f1;
+    --llm-bg: #faf7ff; --llm-line: #8b6ad8;
+    color-scheme: light;
+  }
+}
+
+body[data-view="report"] .frame-top { background: transparent; border-color: transparent; }
+.report { padding: 6px 0 8px; }
+.report-toolbar { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px;
+  width: min(1000px, 100% - 32px); margin: 0 auto 22px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 14px;
+  background: var(--r-toolbar); box-shadow: var(--shadow); backdrop-filter: blur(8px); }
+.report-toolbar .help { margin: 0 auto 0 0; }
+
+/* ---------------------------------------------------------------- the sheet (print size) */
+.report-sheet {
+  --fs: 10.5px; --fs-s: 9.5px; --fs-xs: 8.5px;
+  width: 210mm; margin: 0 auto; padding: 9mm; background: #fff; color: var(--ink);  /* paper: white in both themes */
+  border: 1px solid var(--line); border-radius: 6px; box-shadow: var(--shadow-lift);
+  font-size: var(--fs); line-height: 1.36; font-variant-numeric: tabular-nums;
+}
+:where(.report-sheet) p { margin: 0; }
+.report-sheet .src { padding: 0 6px; font-size: var(--fs-xs); line-height: 1.6; }
+.report-sheet .badge { gap: 4px; padding: 0 6px; font-size: var(--fs-xs); line-height: 1.6; white-space: nowrap; }
+.report-sheet .badge::before { width: 5px; height: 5px; }
+.report-sheet .group-tag { padding: 0 8px; font-size: var(--fs-s); line-height: 1.6; background: #fff; }
+.report-sheet .group-tag::before { width: 7px; height: 7px; }
+.report-sheet .swatch { width: 9px; height: 9px; border-radius: 2px; }
+.report-sheet .swatch-hatch { background: repeating-linear-gradient(45deg, #f4f6f6 0 2px, #aab4b8 2px 3px); }
+
+/* header */
+.r-head { padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+.r-brand { display: flex; align-items: center; gap: 6px; font-size: var(--fs-s); color: var(--ink-3); }
+.r-logo { width: 16px; height: 16px; }
+.r-brand-name { font-weight: 600; color: var(--ink); letter-spacing: -0.01em; }
+.r-brand-doc { margin-left: auto; text-transform: uppercase; letter-spacing: .06em; font-size: var(--fs-xs); font-weight: 600; }
+.r-head-main { display: grid; grid-template-columns: minmax(0, 1fr) 230px; gap: 8px 20px; align-items: end; margin-top: 6px; }
+.r-title { margin: 0; font: 400 27px/1.05 var(--font-display); letter-spacing: -0.03em; overflow-wrap: anywhere; }
+.r-headline { margin-top: 2px; font: 500 15.5px/1.2 var(--font-display); letter-spacing: -0.015em; color: var(--blue-hover); }
+.r-meta { display: grid; gap: 1px; margin: 0; font-size: var(--fs-xs); }
+.r-meta div { display: grid; grid-template-columns: 62px minmax(0, 1fr); gap: 6px; }
+.r-meta dt { color: var(--ink-3); }
+.r-meta dd { margin: 0; color: var(--ink); overflow-wrap: anywhere; }
+
+/* inputs and totals */
+.r-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); margin: 8px 0 0; border: 1px solid var(--line);
+  border-radius: 6px; overflow: hidden; }
+.r-inputs > div { padding: 5px 8px; border-left: 1px solid var(--line); }
+.r-inputs > div:first-child { border-left: 0; }
+.r-inputs dt { font-size: var(--fs-xs); color: var(--ink-3); white-space: nowrap; }
+.r-inputs dd { margin: 0; font-size: 14px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.3; }
+.r-inputs .r-cell-note { font-size: var(--fs-xs); font-weight: 400; letter-spacing: 0; color: var(--ink-3); line-height: 1.25; }
+.r-inputs .is-changed { background: var(--blue-soft); }
+.r-inputs .is-changed dd:not(.r-cell-note) { color: #1d4fbf; }
+.r-alerts { display: grid; gap: 3px; margin-top: 6px; }
+.r-alert { padding: 3px 8px; border-radius: 5px; background: var(--warn-soft); color: var(--warn); font-size: var(--fs-s); }
+.r-flag { margin-top: 3px; font-size: var(--fs-xs); color: var(--warn); }
+
+/* sections */
+.r-section { min-width: 0; margin-top: 8px; }
+.r-section-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin-bottom: 4px; }
+.r-section-head h2 { margin: 0 4px 0 0; font: 500 15px/1.15 var(--font-display); letter-spacing: -0.015em; }
+.r-help { margin-top: 3px; font-size: var(--fs-xs); color: var(--ink-3); }
+.r-help-inline { font-size: var(--fs-xs); font-weight: 400; color: var(--ink-3); }
+.r-grid { display: grid; grid-template-columns: minmax(0, 1.22fr) minmax(0, 1fr); gap: 0 18px; align-items: start; }
+.r-col { min-width: 0; }
+
+/* the plan table */
+.r-table { width: 100%; border-collapse: collapse; font-size: var(--fs-s); line-height: 1.28; }
+.r-table th, .r-table td { padding: 1.5px 5px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.r-table thead th { padding-top: 0; font-size: var(--fs-xs); font-weight: 600; color: var(--ink-3); white-space: nowrap; }
+.r-table .num { text-align: right; white-space: nowrap; }
+.r-table tbody th.r-lang { font-weight: 600; white-space: nowrap; }
+.r-rank { width: 18px; color: var(--ink-3); }
+.r-share { font-weight: 600; }
+.r-lift, .r-cost { white-space: nowrap; }
+.r-lift strong, .r-cost strong { font-weight: 600; }
+.r-range, .r-cost { color: var(--ink-3); }
+.r-cost strong { color: var(--ink); }
+.r-cost.is-muted strong { color: var(--ink-3); font-weight: 500; }
+.r-why { color: var(--ink-2); }
+.r-phone-label { display: none; }
+.r-dot { display: inline-block; width: 6px; height: 6px; margin: 0 4px 1px 0; border-radius: 50%; background: var(--ok); vertical-align: middle; }
+.r-dot.conf-partial, .r-dot.conf-mixed { background: #d89a16; }
+.r-dot.conf-none { background: var(--ink-3); }
+.r-group-row th { padding: 2px 5px; border-bottom: 1px solid var(--line); background: var(--surface-2); font-weight: 400; }
+.r-group-translate_game .r-group-row th { background: #f3f7fe; }
+.r-group-store_page_only .r-group-row th { background: #fef7f2; }
+.r-group-sum { margin: 0 8px 0 6px; font-weight: 600; }
+.r-group-blurb { font-size: var(--fs-xs); color: var(--ink-3); }
+.r-empty { color: var(--ink-3); }
+.r-key { margin-top: 3px; font-size: var(--fs-xs); color: var(--ink-3); }
+.r-dot-key { margin-left: 6px; white-space: nowrap; }
+.r-dot-key .r-dot { margin-right: 3px; }
+.r-versus { margin-top: 3px; font-size: var(--fs-s); color: var(--ink-2); }
+
+/* the map */
+.r-map-view { font-size: var(--fs-xs); color: var(--ink-2); }
+.r-figure { margin: 4px 0 0; }
+.r-map-svg { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; background: #fbfcfc; }
+.r-map-svg .country, .r-map-svg .country:not(.is-unknown):hover { stroke: #fff; stroke-width: .5; cursor: default; transition: none; }
+.r-map-missing { display: grid; place-items: center; min-height: 120px; padding: 12px; border: 1px dashed var(--line-2);
+  border-radius: 6px; background: var(--surface-2); text-align: center; font-size: var(--fs-s); color: var(--ink-2); }
+.r-legend { list-style: none; display: flex; flex-wrap: wrap; gap: 1px 9px; margin: 4px 0 0; padding: 0; font-size: var(--fs-xs); color: var(--ink-2); }
+.r-legend li { display: inline-flex; align-items: center; gap: 4px; }
+
+/* evidence */
+.r-look-list { list-style: none; display: grid; gap: 2px; margin: 0; padding: 0; font-size: var(--fs-s); }
+.r-look-list li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 6px; }
+.r-look-name { font-weight: 600; }
+.r-look-list .is-unused .r-look-name { font-weight: 500; color: var(--ink-2); }
+.r-look-detail { font-size: var(--fs-xs); color: var(--ink-3); }
+.r-summary { padding: 3px 8px; border-left: 2px solid var(--line-2); border-radius: 0 5px 5px 0; background: var(--surface-2);
+  font: 400 11.5px/1.34 var(--font-display); }
+.r-summary.is-llm { border-left-color: #8b6ad8; background: #faf7ff; }
+.r-audience { margin-top: 3px; font-size: var(--fs-s); }
+.r-market { margin-top: 4px; font-size: var(--fs-s); }
+.r-loves { overflow-wrap: anywhere; }
+.r-loves-label { margin-right: 4px; font-size: var(--fs-xs); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-3); }
+.r-llm { margin-top: 2px; padding: 2px 6px; border-left: 2px solid #8b6ad8; background: #faf7ff; }
+.r-callout { padding: 4px 8px; border-left: 2px solid var(--blue); border-radius: 0 5px 5px 0; background: #f3f7fe; font-size: var(--fs-s); color: var(--ink-2); }
+.r-callout strong { color: var(--ink); font-weight: 600; }
+.r-limit-list { display: grid; gap: 1px; margin: 4px 0 0; padding-left: 12px; font-size: var(--fs-xs); color: var(--ink-2); }
+
+/* footer */
+.r-foot { margin-top: 9px; padding-top: 4px; border-top: 1px solid var(--line); font-size: var(--fs-xs); color: var(--ink-3); }
+.r-foot strong { color: var(--ink-2); font-weight: 600; }
+
+/* ---------------------------------------------------------------- screens (never the measured or printed page) */
+.report-sheet.r-measure { width: 192mm; padding: 0; border: 0; zoom: 1; }  /* the print layout, for fitToPage() */
+@media screen and (min-width: 1180px) {
+  .report-sheet:not(.r-measure) { zoom: 1.2; }
+}
+@media screen and (max-width: 860px) {
+  .report-toolbar { position: static; width: calc(100% - 16px); }
+  .report-toolbar .help { flex-basis: 100%; order: 3; }
+  .report-sheet:not(.r-measure) { --fs: 14px; --fs-s: 13px; --fs-xs: 12px; width: calc(100% - 16px); padding: 20px 16px;
+    border-radius: 16px; }
+  .report-sheet:not(.r-measure) :is(.r-head-main, .r-grid) { grid-template-columns: minmax(0, 1fr); }
+  .report-sheet:not(.r-measure) .r-title { font-size: 34px; }
+  .report-sheet:not(.r-measure) .r-headline { font-size: 20px; }
+  .report-sheet:not(.r-measure) .r-meta div { grid-template-columns: 92px minmax(0, 1fr); }
+  .report-sheet:not(.r-measure) .r-inputs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .report-sheet:not(.r-measure) .r-inputs > div { border-left: 0; border-top: 1px solid var(--line); }
+  .report-sheet:not(.r-measure) .r-inputs > div:nth-child(-n+2) { border-top: 0; }
+  .report-sheet:not(.r-measure) .r-inputs > div:nth-child(even) { border-left: 1px solid var(--line); }
+  .report-sheet:not(.r-measure) .r-inputs dd:not(.r-cell-note) { font-size: 18px; }
+  .report-sheet:not(.r-measure) .r-section { margin-top: 18px; }
+  .report-sheet:not(.r-measure) .r-section-head h2 { font-size: 20px; }
+  .report-sheet:not(.r-measure) .r-summary { font-size: 16px; }
+  .report-sheet:not(.r-measure) :is(.r-table, .r-table tbody, .r-table th, .r-table td) { display: block; padding: 0; border: 0; }
+  .report-sheet:not(.r-measure) .r-table thead { display: none; }
+  .report-sheet:not(.r-measure) .r-table tr { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 2px 8px;
+    padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .report-sheet:not(.r-measure) .r-table tr.r-group-row { display: block; margin-top: 10px; padding: 0; border: 0; }
+  .report-sheet:not(.r-measure) .r-table .r-group-row th { padding: 8px; border-radius: 8px; }
+  .report-sheet:not(.r-measure) .r-group-blurb { display: block; margin-top: 2px; }
+  .report-sheet:not(.r-measure) .r-table .r-lift { grid-column: 1 / 3; }
+  .report-sheet:not(.r-measure) .r-phone-label { display: inline; color: var(--ink-3); }
+  .report-sheet:not(.r-measure) .r-table .r-why { grid-column: 1 / -1; white-space: normal; }
+}
+
+/* ---------------------------------------------------------------- print: only the report, one A4 page */
+@page { size: A4 portrait; margin: 9mm; }
+@media print {
+  body[data-view="report"] { background: #fff; overflow: visible; }
+  body[data-view="report"] > :not(main), body[data-view="report"] main > :not(#view-report),
+  body[data-view="report"] .report-toolbar { display: none !important; }
+  body[data-view="report"] .report { padding: 0; }
+  /* a fixed layout width, so --fit scales exactly the layout fitToPage() measured (an auto width would re-flow) */
+  .report-sheet { width: 192mm; margin: 0 auto; padding: 0; border: 0; border-radius: 0; box-shadow: none; zoom: var(--fit, 1); }
+  .report-sheet, .report-sheet * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .r-section, .r-table tr, .r-market, .r-foot { break-inside: avoid; }
+}

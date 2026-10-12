@@ -1,0 +1,12 @@
+# Python 3.12. Versions are the ones the backtest and the API were tested with.
+anthropic==1.13.0
+fastapi==0.135.3
+matplotlib==3.10.7
+mcp==1.27.0
+numpy==2.3.5
+pandas==2.3.3
+python-dotenv==1.2.2
+requests==2.32.5
+reverse_geocoder==1.5.1
+scipy==1.16.3
+uvicorn==0.43.0
