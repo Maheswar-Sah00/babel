@@ -10,6 +10,8 @@
 /spike/raw/
 # Precomputed runtime data (tools/build_runtime.py): Qloo-derived, private like cache/
 /data/runtime/
+# Deployment bundle (tools/build_deploy.py): code plus private runtime data and demo cache
+/dist/
 
 # Abandoned Crossover experiments: kept locally, not published (docs/DECISIONS.md, section 9)
 /spike/

@@ -154,3 +154,14 @@ def test_the_planner_falls_back_to_the_cache_when_it_is_unusable(monkeypatch, tm
     runtime.save(files(), tmp_path)
     monkeypatch.setattr(P, "_CONTEXT", None)
     assert isinstance(P.context(), runtime.Precomputed)
+
+
+def test_a_deployment_refuses_the_cache_fallback(monkeypatch, tmp_path):
+    """BABEL_REQUIRE_RUNTIME=1 (a deployment carries only part of the cache): no silent rebuild from live requests."""
+    monkeypatch.setenv("BABEL_RUNTIME_DATA", str(tmp_path))  # an empty folder: not built
+    monkeypatch.setenv("BABEL_REQUIRE_RUNTIME", "1")
+    monkeypatch.setattr(P, "_CONTEXT", None)
+    monkeypatch.setattr(P, "Context", lambda: pytest.fail("fell back to the cache"))
+    with pytest.raises(RuntimeError, match="required.*not built"):
+        P.context()
+    assert P._CONTEXT is None

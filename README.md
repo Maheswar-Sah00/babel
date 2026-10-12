@@ -189,6 +189,25 @@ curl -N -X POST localhost:8000/plan -H "Content-Type: application/json" \
 Settings (CORS, rate limits, timeouts, body size) come from `BABEL_*` environment variables; see `.env.example`.
 Keys stay on the server, and errors never include stack traces.
 
+## Deploy (Railway)
+
+One service serves both the web app and the API. The server needs private data that git leaves out (`data/runtime/`
+and the demo games' cached API answers), so it is deployed from a bundle built on your machine, not from GitHub:
+
+```bash
+python tools/build_deploy.py        # -> dist/railway/ (git-ignored): code, runtime data, the demos' cache; checked
+npm install -g @railway/cli         # once
+railway login                       # once, in your browser
+railway init                        # once: creates the project and links this folder
+railway up dist/railway --path-as-root --no-gitignore
+```
+
+`build_deploy.py` records the cache files the four demo buttons read, copies only those, scans the bundle for secrets
+and runs every demo from the bundle with all network requests refused. The bundle holds no keys: set them in the
+Railway service's variables, with `BABEL_TRUST_PROXY=1` and `BABEL_MCP_ALLOWED_HOSTS` set to the public host name.
+`deploy/Dockerfile` sets `BABEL_REQUIRE_RUNTIME=1`, so a server without its runtime data reports not ready instead of
+rebuilding it with thousands of live requests; `deploy/railway.json` makes `/health/ready` the health check.
+
 ## Use Babel from another AI agent (MCP)
 
 Babel is an MCP tool, `babel_language_plan`, built with the official Python MCP SDK. It takes `steam_url` (or

@@ -16,6 +16,7 @@ Add --markets for market notes (babel/markets.py) and --json to print the full e
 import argparse
 import json
 import math
+import os
 import sys
 from dataclasses import asdict, dataclass, field
 from functools import cached_property
@@ -409,13 +410,16 @@ _CONTEXT = None
 
 def context():
     """The runtime data, loaded once: the precomputed files in data/runtime/ when they are current, else a Context
-    built lazily from the backtest data and the API cache."""
+    built lazily from the backtest data and the API cache. BABEL_REQUIRE_RUNTIME=1 (a deployment, which carries only
+    part of the cache) refuses that fallback, which would mean thousands of live requests."""
     global _CONTEXT
     if _CONTEXT is None:
         from . import runtime  # babel.runtime imports this module
         try:
             _CONTEXT = runtime.load()
         except runtime.Unavailable as e:
+            if os.environ.get("BABEL_REQUIRE_RUNTIME", "") in ("1", "true", "yes"):
+                raise RuntimeError(f"Precomputed runtime data required (BABEL_REQUIRE_RUNTIME) but not usable: {e}") from e
             print(f"Precomputed runtime data not used: {e}. Loading it from the API cache.", file=sys.stderr)
             _CONTEXT = Context()
     return _CONTEXT

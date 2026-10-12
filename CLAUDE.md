@@ -41,6 +41,7 @@ Deadline: 30 Oct 2026, 11:45 pm ET. Feature freeze 25 Oct.
 | `tools/check_secrets.py` | Pre-publication secret scan |
 | `tools/build_world.py`, `tools/screenshots.py` | Map outlines (`web/static/world.json`; `--hero`: `web/static/world-hero.json`, 1:50m, small islands as points); README screenshots from a running server |
 | `tools/build_runtime.py` | Builds `data/runtime/` from the cache with no network (`--check-qloo`: also check unchecked pool games in Qloo) |
+| `tools/build_deploy.py`, `deploy/` | Deployment bundle `dist/railway/` (git-ignored): code + `data/runtime/` + only the cache files the demos read, secret-scanned and checked offline; `deploy/Dockerfile` (sets `BABEL_REQUIRE_RUNTIME=1`), `deploy/railway.json` (health check `/health/ready`) |
 | `tools/precache_demos.py` | Runs the four demo buttons through the API as the browser does; `--offline` proves they need no live call |
 | `cache/` | Every API response (git-ignored, about 1 GB; never delete: it costs calls and hours) |
 
@@ -63,6 +64,7 @@ python backtest/market_insights.py                    # cached run, 0 network ca
 python backtest/evaluate.py                           # full backtest: only when a task asks
 python tools/build_runtime.py                         # precomputed runtime data -> data/runtime/ (cache only, ~1 min)
 python tools/precache_demos.py --offline              # the demo buttons need no live API call (exit 1 if they do)
+python tools/build_deploy.py                          # deployment bundle -> dist/railway/ (then: railway up dist/railway --path-as-root --no-gitignore)
 python tools/build_world.py                           # rebuild the map outlines web/static/world.json (rarely)
 python tools/build_world.py --hero                    # the Start screen's 1:50m outlines web/static/world-hero.json
 python tools/check_secrets.py                         # must print OK before any commit is pushed
