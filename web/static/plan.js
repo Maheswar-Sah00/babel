@@ -1,7 +1,7 @@
 // The Plan screen: the world map of where fans of games like yours are (Qloo data, aggregated per country by the
 // server), the translation plan with a budget that re-fits on the server (babel.plan.fit_budget, the engine's own
 // optimizer), Babel vs the usual list, and the evidence. Every number shown comes from the server; this file selects
-// and formats it, and words it plainly (the exact figures stay one click away: "The exact numbers", tooltips, Why?).
+// and formats it, and words it plainly (secondary detail stays behind a "+", in tooltips and in Why?).
 // Text from the server is always inserted as text.
 
 import { $, $$, api, countryName, errorText, fmtInt, fmtUsd, fmtUsd2, GROUP_LABEL, h, LANG, listText, pct,
@@ -19,8 +19,7 @@ const STATUS_BADGE = { valid: ["badge-ok", "Used: real Qloo fan data", "used"],
 // where a number or a sentence comes from: [class, label]; Qloo data, Babel's own figures and AI text stay apart
 const SOURCES = { "Qloo data": ["src-qloo", "Qloo data"], "Babel estimate": ["src-estimate", "Babel estimate"],
   "Babel plan": ["src-plan", "Babel plan"], "Reference data": ["src-ref", "Public data"],
-  "Steam reviews": ["", "Steam reviews"], Claude: ["src-llm", "Written by Claude (AI)"],
-  "Written by code": ["src-plan", "Written by Babel (no AI)"] };
+  "Steam reviews": ["", "Steam reviews"] };
 const GROUP_ORDER = ["translate_game", "store_page_only", "skip"];
 const LANGUAGE_NOTES = {
   spanish: "One translation for Spain and Latin America (Steam has two Spanish options; Babel plans one).",
@@ -28,13 +27,6 @@ const LANGUAGE_NOTES = {
   tchinese: "Traditional characters, as read in Taiwan, Hong Kong and Macau.",
   schinese: "Simplified characters, as read in mainland China and Singapore.",
 };
-// evidence IDs the explanation cites, as plain tags (the ID itself is the tag's tooltip and the dialog's subtitle)
-const CITE = { plan: "the plan", costs: "costs", coverage: "coverage", game: "your game", track_record: "test results",
-  evidence_level: "amount of evidence", disagreement: "where games disagree", discovery: "your description",
-  audience: "who the fans are" };
-const FORMULA = { signal: "Qloo signal", lift: "Qloo adjustment", estimated_share: "share formula",
-  cost_full: "cost formula", cost_store_page: "store page cost", optimizer: "budget method" };
-
 const LIST_SHOWN = 15;  // countries listed before "Show all"
 const v = { worldState: "idle", worldMap: null, metric: "affinity", lookalike: "all", country: null, language: null,
   legendKey: null, fitTimer: 0, fitController: null, allCountries: false };
@@ -98,6 +90,12 @@ function exact(summary, ...body) {
   return h("details", { class: "exact" }, h("summary", { text: summary }), ...body);
 }
 
+/** Secondary detail kept off the first view: a small "+" that opens it. */
+function plus(label, ...body) {
+  return h("details", { class: "plus" }, h("summary", { "aria-label": label, title: label },
+    h("span", { class: "plus-icon", "aria-hidden": "true" })), h("div", { class: "plus-body" }, ...body));
+}
+
 // ---------------------------------------------------------------- header and alerts
 function renderHead() {
   const p = v.plan;
@@ -107,20 +105,12 @@ function renderHead() {
   $("#plan-sub").textContent = `${head.sub} Text to translate: ${fmtInt.format(p.inputs.word_count)} words.`;
   const level = p.lookalikes.evidence_level;
   const n = p.lookalikes.used.length;
-  const exp = v.explanation;
   $("#plan-chips").replaceChildren(...[
     h("li", { class: `chip-info level-${level}` }, h("span", { class: "chip-dot", "aria-hidden": "true" }),
       level === "none" ? "Qloo has no real fan data for games like yours: the usual share only"
         : `Based on ${plural(n, "game")} like yours with Qloo fan data${level === "low" ? " (fewer than usual)" : ""}`),
-    exp ? h("li", { class: "chip-info" }, exp.kind === "llm_text" ? "Explained by Claude (AI), every number checked"
-      : "Explanation written by Babel (no AI)") : null,
     budgetChanged() ? h("li", { class: "chip-info chip-changed" }, `Budget changed from ${fmtUsd.format(v.original)}`) : null,
   ].filter(Boolean));
-  const blob = new Blob([JSON.stringify(v.res, null, 2)], { type: "application/json" });
-  const link = $("#plan-download");
-  if (link.href.startsWith("blob:")) URL.revokeObjectURL(link.href);
-  link.href = URL.createObjectURL(blob);
-  link.download = `babel-plan-${v.res.plan_id}.json`;
 }
 
 /**
@@ -150,9 +140,7 @@ function planNotes() {
 function plainNote(text) {
   const d = v.plan.discovery;
   const reasons = d?.confidence?.reasons?.join(" ") || "";
-  if (d && text.startsWith("Tags and candidate look-alikes were inferred")) {
-    return `Claude (AI) read your description and suggested Steam tags and games like yours; Babel checked them on Steam and Qloo. How well they match: ${d.confidence.level}.`;
-  }
+  if (text.startsWith("Tags and candidate look-alikes were inferred") || text.startsWith("SteamSpy had only")) return null;
   if (d && text.startsWith("Weak evidence:")) {
     const alts = (d.alternatives || []).slice(0, 4).map((a) => a.name);
     return `Weak evidence: ${reasons} Pick the games like yours yourself${alts.length ? `, for example ${listText(alts)}` : ""}.`;
@@ -170,7 +158,7 @@ function renderAlerts() {
     out.push(h("p", { class: "note", text: `Some data could not be read, so parts of this plan rest on less evidence.${errors}` }));
   }
   if (!v.map) out.push(h("p", { class: "note", text: "The world map could not be built for this plan; the plan itself is unaffected." }));
-  for (const m of planNotes()) out.push(h("p", { class: "note is-info", text: m.text, title: m.exact }));
+  for (const m of planNotes().filter((x) => x.text)) out.push(h("p", { class: "note is-info", text: m.text, title: m.exact }));
   $("#plan-alerts").replaceChildren(...out);
 }
 
@@ -496,7 +484,7 @@ function marketBlock(m) {
     h("p", { class: "help", title: "Two Qloo steps: what is popular in the country, then re-ranked by fans of the games like yours.",
       text: `Popular in ${m.country_name}, then sorted by how much fans of games like yours like them. Background for marketing: it doesn't show what any one player likes.` }),
     lists,
-    m.note?.status === "ok" ? h("p", { class: "llm-note" }, source("Claude"), " ", m.note.text) : null,
+    m.note?.status === "ok" ? h("p", { class: "llm-note", text: m.note.text }) : null,
     budgetChanged() ? h("p", { class: "help", text: `Markets were chosen for the ${fmtUsd.format(v.original)} plan.` }) : null);
 }
 
@@ -695,12 +683,13 @@ function languageItem(code, group) {
     h("p", { class: "lang-cost" }, h("strong", { text: cost })),
     h("p", { class: "lang-meta", title: `${cap(adj.text)} (${adj.exact}).` }, "Qloo adjustment: ", h("strong", { text: adj.short })),
     h("p", { class: `lang-conf conf-${conf.level}`, title: conf.range ? `Qloo adjustment per game: ${conf.range}` : null, text: conf.text }),
-    h("p", { class: "lang-reason", text: shortReason(code, group) }),
-    h("div", { class: "lang-actions" },
-      h("button", { type: "button", class: "button button-secondary button-small", "aria-label": `Why this recommendation for ${LANG[code]}?`,
-        onclick: (e) => openWhy(code, e.currentTarget) }, "Why?"),
-      h("button", { type: "button", class: "link-button", "aria-label": `Show ${LANG[code]} on the map`,
-        onclick: () => selectLanguage(code, { focus: true, scroll: true }) }, "On the map")));
+    plus(`More about ${LANG[code]}`,
+      h("p", { class: "lang-reason", text: shortReason(code, group) }),
+      h("div", { class: "lang-actions" },
+        h("button", { type: "button", class: "button button-secondary button-small", "aria-label": `Why this recommendation for ${LANG[code]}?`,
+          onclick: (e) => openWhy(code, e.currentTarget) }, "Why?"),
+        h("button", { type: "button", class: "link-button", "aria-label": `Show ${LANG[code]} on the map`,
+          onclick: () => selectLanguage(code, { focus: true, scroll: true }) }, "On the map"))));
 }
 
 function renderPlan() {
@@ -710,8 +699,6 @@ function renderPlan() {
     skip: `Too few likely players (under ${minText()}) or no budget left, for now.` };
   const total = { translate_game: v.fit.costs.translate_game, store_page_only: v.fit.costs.store_page_only };
   $("#plan-groups").replaceChildren(
-    h("p", { class: "help plan-key" }, h("strong", { text: "%" }), " = Babel's estimate of the share of your likely non-English players who speak the language. ",
-      h("strong", { text: "Qloo adjustment" }), " = how much more (+) or less (−) common fans of games like yours are where it's spoken. Costs are estimates from example per-word rates, not quotes."),
     ...GROUP_ORDER.map((group) => h("section", { class: `plan-group plan-group-${group}`, "aria-labelledby": `pg-${group}` },
       h("div", { class: "plan-group-head" },
         h("h3", { id: `pg-${group}`, text: GROUP_LABEL[group] }),
@@ -742,15 +729,11 @@ function versusWhy(r) {
   const has = langRow(r.code).lookalikes_with_data > 0;
   const adj = qlooAdjustment(r.qloo_lift, has);
   const moved = has && adj.short !== "about average";
-  const start = `English-only indie games usually get ${pct(r.baseline_share)} of their non-English reviews in ${r.language}: `
-    + `${ordinal(r.baseline_rank)} of 14${r.baseline_rank === r.generic_rank ? ", the same place as on the usual list."
-      : ` (${ordinal(r.generic_rank)} on the usual list).`}`;
-  const qloo = has ? `Qloo: ${adj.text}` : "Qloo has no fan data for its countries";
+  const fans = !has ? "No Qloo data" : moved ? `Fans ${adj.short}` : "Fans about average";
   const way = r.babel_rank < r.baseline_rank ? "up" : "down";
-  const end = r.babel_rank === r.baseline_rank ? `${qloo}, so it stays ${ordinal(r.babel_rank)}.`
-    : moved && (r.qloo_lift > 1) === (r.babel_rank < r.baseline_rank) ? `${qloo}, which moves it ${way} to ${ordinal(r.babel_rank)}.`
-      : `${qloo}; changes to other languages move it ${way} to ${ordinal(r.babel_rank)}.`;
-  return `${start} ${end}`;
+  if (r.babel_rank === r.baseline_rank) return `${fans}: stays ${ordinal(r.babel_rank)}.`;
+  return moved && (r.qloo_lift > 1) === (r.babel_rank < r.baseline_rank) ? `${fans}: ${way} to ${ordinal(r.babel_rank)}.`
+    : `${fans}; others moved: ${way} to ${ordinal(r.babel_rank)}.`;
 }
 
 function renderVersus() {
@@ -797,29 +780,6 @@ function card(title, kind, ...body) {
   return h("article", { class: "evidence-card-item" }, h("h3", {}, title, " ", kind ? source(kind) : null), ...body);
 }
 
-/** An evidence ID the explanation cites ("lang:russian"), as a plain tag ("Russian"). */
-function citeLabel(id) {
-  const [kind, key] = id.split(":");
-  if (kind === "lang") return LANG[key] || key;
-  if (kind === "market") return `${LANG[key] || key} market`;
-  if (kind === "lookalike" || kind === "rejected") return v.index[id]?.name || id;
-  if (kind === "caveat") return `limit ${key}`;
-  if (kind === "formula") return FORMULA[key] || id;
-  return CITE[id] || id;
-}
-
-/** A plain wording of a known limit (the server's wording is its tooltip); numbers from the plan's track record. */
-function plainCaveat(text) {
-  if (text.startsWith("Shares are estimates")) return "Shares are estimates of where your likely non-English players are, not sales, wishlists or player counts.";
-  if (text.startsWith("The baseline comes from")) {
-    return "The usual share comes from Steam reviews of English-only games, so it under-counts players who only buy translated games (especially Chinese, Japanese and Korean speakers).";
-  }
-  if (text.startsWith("On small English-only")) return null;  // a note about the test, kept on the Track record
-  if (text.startsWith("Costs are estimates")) return "Costs are estimates from example per-word rates, not quotes.";
-  if (text.startsWith("Qloo data describes")) return "Qloo data describes the combined taste of many fans of similar games, never what any one player likes.";
-  return text;
-}
-
 /** Why a market's country was chosen, plainly (the server's reason is its tooltip). */
 function choiceText(choice) {
   if (choice.kind === "qloo_measured") return "Chosen because most of the Qloo fan activity for games like yours in this language's countries is here.";
@@ -831,29 +791,21 @@ function renderEvidence() {
   const cards = [];
   const looks = v.map?.lookalikes || [...v.plan.lookalikes.used.map((x) => ({ ...x, usable: true })),
     ...v.plan.lookalikes.rejected.map((x) => ({ ...x, usable: false }))];
-  const requests = looks.filter((x) => x.request);
   cards.push(card("Games like yours", "Qloo data",
     h("p", { class: "help", text: "Only games with real Qloo fan data count. Games Qloo doesn't know, or has no real data for, are listed here but never used." }),
     h("ul", { class: "look-list" }, looks.map((x) => {
       const [cls, text] = STATUS_BADGE[x.status] || ["badge-bad", `Not used: ${x.status}`];
       return h("li", {}, h("div", { class: "look-top" }, h("strong", { text: x.name || `Steam ${x.appid}` }), badge(cls, text, x.reason)),
         x.usable && x.countries_with_score != null ? h("span", { class: "help", text: `Qloo has a score for ${x.countries_with_score} countries` }) : null);
-    })),
-    requests.length ? exact("Qloo request IDs",
-      h("ul", { class: "request-list" }, requests.map((x) => h("li", {}, `${x.name || `Steam ${x.appid}`}: `,
-        h("code", { class: "request-id", text: x.request })))),
-      h("p", { class: "help", text: "Each ID names the saved Qloo answer the plan read (cache/qloo/<id>.json)." })) : null));
+    }))));
 
   const exp = v.explanation;
   if (exp) {
-    cards.push(card("Explanation", exp.kind === "llm_text" ? "Claude" : "Written by code",
-      h("p", { class: "help", text: exp.kind === "llm_text" ? "Written by Claude (AI) from the plan's data. Babel's code checked every number against that data; the tags after each point show what it rests on."
-        : `Claude's explanation couldn't be used (${exp.reason || "unavailable"}), so Babel's code wrote this one from the same data.` }),
+    cards.push(card("Explanation", null,
       budgetChanged() ? h("p", { class: "note", text: `Written for the ${fmtUsd.format(v.original)} plan; the budget has changed since.` }) : null,
       h("p", { class: "explain-summary", text: exp.summary }),
-      h("ul", { class: "explain-points" }, exp.points.map((pt) => h("li", {}, pt.text, " ",
-        pt.evidence.map((id) => h("button", { type: "button", class: "evidence-id", "data-id": id, title: `Evidence ${id}`,
-          onclick: (e) => openEvidence(id, e.currentTarget) }, citeLabel(id))))))));
+      exp.points.length ? plus("More of the explanation",
+        h("ul", { class: "explain-points" }, exp.points.map((pt) => h("li", { text: pt.text })))) : null));
   }
 
   const aud = v.notes?.audience;
@@ -884,17 +836,11 @@ function renderEvidence() {
         h("p", { class: "help", title: m.country_choice.reason, text: choiceText(m.country_choice) }),
         Object.entries(m.also_loves).filter(([, r]) => r.status === "ok").map(([d, r]) =>
           h("p", { class: "loves-line" }, h("span", { class: "loves-label", text: d === "films" ? "Films" : "Music" }), r.items.map((i) => i.name).join(" · "))),
-        m.note?.status === "ok" ? h("p", { class: "llm-note" }, source("Claude"), " ", m.note.text) : null))));
+        m.note?.status === "ok" ? h("p", { class: "llm-note", text: m.note.text }) : null))));
   } else if (v.notes) {
     cards.push(card("What these fans also like, by market", null, h("p", { class: "muted", text: "Qloo had no market data for this plan's markets, so none are shown." })));
   }
 
-  const caveats = [...v.plan.uncertainty.caveats, ...(v.notes?.caveats || []).slice(0, 1)]
-    .map((c) => [c, plainCaveat(c)]).filter(([, plain]) => plain);
-  const w = v.plan.track_record.wikipedia_pageviews;
-  cards.push(card("Good to know", null,
-    h("ul", { class: "caveats" }, caveats.map(([c, plain]) => h("li", { title: c, text: plain }))),
-    h("p", { class: "help", text: `How Babel was tested: on ${w.test_games} well-known games released since 2023, Babel's top 3 languages reached ${pct(w.babel_top3_coverage)} of the real non-English audience, and Qloo's fan maps made the picks better, very unlikely to be luck (p ${w.sign_test_p}). The track record has the details.` })));
   $("#evidence-grid").replaceChildren(...cards);
 }
 
@@ -949,77 +895,34 @@ function openWhy(code, opener) {
   const adj = adjustment(code);
   const steps = [];
   steps.push(step(1, `The usual share: ${pct(x.baseline_share)}`, source("Steam reviews"),
-    h("p", { text: `On average, English-only indie games get ${pct(x.baseline_share)} of their non-English Steam reviews in ${LANG[code]}. That is Babel's starting point.` }),
-    exact("Where this comes from", h("p", { class: "help", text: `Source: ${v.plan.sources.baseline}` }))));
+    h("p", { text: `On average, English-only indie games get ${pct(x.baseline_share)} of their non-English Steam reviews in ${LANG[code]}. That is Babel's starting point.` })));
   if (lang && looks.length) {
-    const head = h("tr", {}, h("th", { scope: "col", text: "Game like yours" }),
-      lang.countries.map((cc) => h("th", { scope: "col", class: "num", text: `${nameOf(cc)} (${lang.population_m[cc]}M)` })),
-      h("th", { scope: "col", class: "num", text: "S1" }));
-    const rows = looks.map((g) => {
-      const key = String(g.appid);
-      return h("tr", {}, h("th", { scope: "row", text: short(g.name, 28) }),
-        lang.countries.map((cc) => {
-          const s = v.map.countries[cc]?.by_lookalike?.[key];
-          return h("td", { class: "num", text: s ? s.affinity.toFixed(3) : "no score" });
-        }),
-        h("td", { class: "num strong", text: lang.s1[key] == null ? "no data" : lang.s1[key].toFixed(3) }));
-    });
     steps.push(step(2, `Qloo adjustment: ${adj.short}`, source("Qloo data"),
       h("p", { text: `Babel reads Qloo's fan maps of ${listText(looks.map((g) => g.name))} in the ${plural(lang.countries.length, "country", "countries")} where ${LANG[code]} is counted (${listText(lang.countries.map((cc) => nameOf(cc)))}), weighting each country by its population, and compares them with the usual.` }),
-      h("p", { text: `Result: ${adj.text}.` }),
-      exact("The exact numbers",
-        h("p", { class: "help", text: `Fan interest (Qloo's affinity, 0 to 1) of each game in each country. S1 is each game's population-weighted average over ${LANG[code]}'s countries.` }),
-        h("div", { class: "table-wrap" }, h("table", { class: "mini-table" }, h("thead", {}, head), h("tbody", {}, rows))),
-        h("p", { class: "calc" }, lang.mean_s1 == null ? "No game like yours has a score in these countries, so the adjustment is ×1."
-          : `Mean S1 ${lang.mean_s1.toFixed(3)} ÷ reference ${lang.reference_s1.toFixed(3)} (the mean S1 of the yardstick games) = ×${lang.lift.toFixed(3)}`),
-        h("p", { class: "help", text: v.plan.formulas.lift }))));
+      h("p", { text: `Result: ${adj.text}.` })));
   } else {
     steps.push(step(2, "Qloo adjustment: none", source("Qloo data"),
       h("p", { text: "Qloo has no real fan data for any game like yours, so Babel keeps the usual share." })));
   }
   if (lang) {
     steps.push(step(3, `Share of your likely non-English players: ${pct(lang.estimated_share)}`, source("Babel estimate"),
-      h("p", { text: "Babel multiplies the usual share by the Qloo adjustment, then rescales the 14 languages so they add up to 100%." }),
-      h("p", { class: "help", text: "An estimate of where your non-English players are likely to be, not sales or player counts." }),
-      exact("The exact numbers", h("p", { class: "calc", text: `Baseline ${lang.baseline_share.toFixed(4)} × lift ${lang.lift.toFixed(3)} = ${lang.baseline_x_lift.toFixed(5)}; ÷ ${v.map.baseline_x_lift_sum.toFixed(5)} (the same product summed over the 14 languages) = ${lang.estimated_share.toFixed(4)}` }))));
+      h("p", { text: "Babel multiplies the usual share by the Qloo adjustment, then rescales the 14 languages so they add up to 100%." }),));
   }
   if (c) {
     steps.push(step(4, `Cost: ${fmtUsd.format(c.cost_full)} for the whole game`, source("Babel estimate"),
-      h("p", { text: `${fmtInt.format(c.game_words + c.store_page_words)} words (your game plus a ${fmtInt.format(c.store_page_words)}-word store page) at ${fmtUsd2.format(c.rate_per_word)} a word${c.min_fee_applies ? `, raised to the ${fmtUsd.format(c.min_fee)} minimum fee` : ""}, plus ${Math.round(c.qa_overhead * 100)}% for review and testing. Just the store page: ${fmtUsd.format(c.cost_store_page)}.` }),
-      h("p", { class: "help", text: "Example per-word rates, not quotes: use your translator's rates." }),
-      exact("The exact numbers",
-        h("p", { class: "calc", text: `(${fmtInt.format(c.game_words)} game words + ${fmtInt.format(c.store_page_words)} store-page words) × ${fmtUsd2.format(c.rate_per_word)} per word = ${fmtUsd2.format(c.full_before_qa)}${c.min_fee_applies ? `, raised to the ${fmtUsd.format(c.min_fee)} minimum fee` : ""}; + ${Math.round(c.qa_overhead * 100)}% for review and QA = ${fmtUsd2.format(c.cost_full)}` }),
-        h("p", { class: "calc", text: `Store page only: ${fmtInt.format(c.store_page_words)} words × ${fmtUsd2.format(c.rate_per_word)} = ${fmtUsd2.format(c.store_page_before_min)}${c.store_min_fee_applies ? `, raised to the ${fmtUsd.format(c.min_fee)} minimum fee` : ""} = ${fmtUsd2.format(c.cost_store_page)}` }))));
+      h("p", { text: `${fmtInt.format(c.game_words + c.store_page_words)} words (your game plus a ${fmtInt.format(c.store_page_words)}-word store page) at ${fmtUsd2.format(c.rate_per_word)} a word${c.min_fee_applies ? `, raised to the ${fmtUsd.format(c.min_fee)} minimum fee` : ""}, plus ${Math.round(c.qa_overhead * 100)}% for review and testing. Just the store page: ${fmtUsd.format(c.cost_store_page)}.` }),));
   }
   steps.push(step(5, `Budget decision: ${GROUP_LABEL[group]}`, source("Babel plan"),
-    h("p", { text: shortReason(code, group) }),
-    h("p", { class: "help", text: `Your budget: ${fmtUsd.format(v.fit.costs.budget)}. Babel checks every mix of full translations that fits it and keeps the one that reaches the most likely players; what is left goes to store pages.` }),
-    exact("How we worked this out", h("p", { text: v.fit.reasons[code] }), h("p", { class: "help", text: v.plan.formulas.optimizer }))));
+    h("p", { text: shortReason(code, group) })));
   steps.push(step(6, "How sure is this?", null,
     h("p", { text: `${conf.text}. For the whole plan: ${EVIDENCE_LEVEL[v.plan.lookalikes.evidence_level]?.(v.plan.lookalikes.used.length) || v.plan.lookalikes.evidence_level}.` }),
-    conf.level === "mixed" ? h("p", { class: "help", text: "Some games like yours have more fans than usual where it's spoken and some fewer, so this estimate is less certain." }) : null,
-    conf.range ? exact("The exact numbers", h("p", { class: "calc", text: `Qloo adjustment per game: ${conf.range}` })) : null));
+    conf.level === "mixed" ? h("p", { class: "help", text: "Some games like yours have more fans than usual where it's spoken and some fewer, so this estimate is less certain." }) : null));
   const cites = (v.explanation?.points || []).filter((pt) => pt.evidence.includes(`lang:${code}`));
-  const requests = looks.map((g) => g.request).filter(Boolean);
   $("#why-title").textContent = `Why ${LANG[code]}: ${GROUP_LABEL[group].toLowerCase()}`;
   $("#why-body").replaceChildren(
     h("ol", { class: "why-steps" }, steps),
-    cites.length ? h("div", { class: "why-cites" }, h("h3", {}, "From the explanation ", source(v.explanation.kind === "llm_text" ? "Claude" : "Written by code")),
-      cites.map((pt) => h("blockquote", { text: pt.text }))) : null,
-    h("div", { class: "why-sources" }, exact("Sources and Qloo request IDs", h("ul", {},
-      requests.map((id) => h("li", {}, "Qloo fan map ", h("code", { text: id }), " (saved answer: cache/qloo/<id>.json)")),
-      h("li", { text: v.plan.sources.lift_reference }), h("li", { text: v.plan.sources.rates })))));
-  showDialog(opener);
-}
-
-function openEvidence(id, opener) {
-  const item = v.index[id];
-  $("#why-title").textContent = `Evidence: ${citeLabel(id)}`;
-  const value = (x) => (Array.isArray(x) ? x.join(", ") : x && typeof x === "object" ? JSON.stringify(x) : String(x));
-  $("#why-body").replaceChildren(item === undefined ? h("p", { text: "This evidence item is not in the plan." })
-    : typeof item !== "object" ? h("p", { text: String(item) })
-      : h("dl", { class: "evidence-dl" }, Object.entries(item).flatMap(([k, val]) => [h("dt", { text: k }), h("dd", { text: value(val) })])),
-  h("p", { class: "help", text: `The exact data the explanation was allowed to use (ID ${id}). Every number in the explanation must appear in data like this.` }));
+    cites.length ? h("div", { class: "why-cites" }, h("h3", { text: "From the explanation" }),
+      cites.map((pt) => h("blockquote", { text: pt.text }))) : null);
   showDialog(opener);
 }
 

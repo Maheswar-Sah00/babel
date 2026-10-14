@@ -336,9 +336,6 @@ input[type="range"] { width: 100%; margin-top: 14px; accent-color: var(--blue); 
 .agents-details p { margin-top: 6px; }
 .footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; width: min(1120px, 100% - 32px);
   margin: 96px auto 0; padding: 26px 0 40px; border-top: 1px solid var(--line); font-size: 13.5px; color: var(--ink-3); }
-.footer-links { display: flex; gap: 20px; }
-.footer-links a { color: var(--ink-2); text-decoration: none; }
-.footer-links a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 
 /* ---------------------------------------------------------------- working */
 .run { width: min(760px, 100% - 32px); margin: 0 auto; padding-bottom: 24px; }
@@ -389,10 +386,6 @@ input[type="range"] { width: 100%; margin-top: 14px; accent-color: var(--blue); 
   border-radius: 0 10px 10px 0; font: 400 17px/1.45 var(--font-display); }
 .explanation-label { display: block; margin-bottom: 6px; font: 500 12.5px var(--font-body); color: var(--ink-3); }
 .outcome-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
-.raw { margin-top: 18px; font-size: 14px; color: var(--ink-3); }
-.raw summary { cursor: pointer; }
-.raw-list { margin: 10px 0 0; padding: 12px 12px 12px 38px; max-height: 300px; overflow: auto; background: var(--surface);
-  border: 1px solid var(--line); border-radius: 10px; font: 12.5px/1.6 ui-monospace, Consolas, monospace; }
 
 /* ---------------------------------------------------------------- plan screen */
 /* Plan-screen tokens. Map colours match static/mapdata.js palette(), validated there for each theme. */
@@ -501,9 +494,6 @@ body[data-view="plan"] .frame-top { background: transparent; border-color: trans
 
 /* the map */
 .explore-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px 28px; flex-wrap: wrap; }
-.aggregate-note { display: flex; align-items: center; gap: 10px; margin: 0; max-width: 440px; padding: 10px 14px; border-radius: 12px;
-  background: var(--surface-2); border: 1px solid var(--line); font-size: 13.5px; line-height: 1.4; color: var(--ink-2); }
-.aggregate-dot { width: 10px; height: 10px; flex: none; border-radius: 50%; background: var(--blue); box-shadow: 0 0 0 4px rgba(45, 108, 243, .15); }
 .explore-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 20px; margin: 22px 0 14px; }
 .metric-switch { display: inline-flex; flex-wrap: wrap; gap: 3px; margin: 0; padding: 4px; min-width: 0; border: 1px solid var(--line);
   border-radius: 12px; background: var(--surface-2); }
@@ -639,7 +629,14 @@ body[data-view="plan"] .frame-top { background: transparent; border-color: trans
 .exact > summary:hover { color: var(--ink); }
 .exact[open] > summary { margin-bottom: 6px; }
 .exact .method-list { margin-top: 6px; }
-.request-list { display: grid; gap: 4px; margin: 0; padding-left: 18px; }
+.plus { margin-top: 8px; }
+.plus > summary { display: inline-grid; place-items: center; width: 26px; height: 26px; list-style: none; cursor: pointer;
+  border: 1px solid var(--line-2); border-radius: 50%; background: var(--surface-2); color: var(--ink-2); }
+.plus > summary::-webkit-details-marker { display: none; }
+.plus > summary:hover { border-color: var(--ink-3); color: var(--ink); }
+.plus-icon::before { content: "+"; font: 600 16px/1 var(--font-body); }
+.plus[open] .plus-icon::before { content: "−"; }
+.plus-body { margin-top: 8px; }
 
 /* the plan */
 .localize-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px 32px; flex-wrap: wrap; }
@@ -655,7 +652,6 @@ body[data-view="plan"] .frame-top { background: transparent; border-color: trans
 .localize > .help { margin-top: 12px; }
 .budget-status { min-height: 1.3em; margin: 6px 0 0; font-size: 14px; color: var(--ink-2); }
 .plan-groups { display: grid; gap: 14px; margin-top: 10px; transition: opacity .15s; }
-.plan-key { margin: 0; }
 .plan-groups[aria-busy="true"] { opacity: .6; }
 .plan-group { padding: 16px; border-radius: 16px; background: var(--surface-2); border: 1px solid var(--line); }
 .plan-group-translate_game { --c: var(--plan-translate); background: var(--plan-translate-bg); border-color: var(--plan-translate-line); }
@@ -705,12 +701,8 @@ body[data-view="plan"] .frame-top { background: transparent; border-color: trans
 .look-list { list-style: none; display: grid; gap: 10px; margin: 10px 0 0; padding: 0; }
 .look-list li { display: grid; gap: 3px; }
 .look-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; }
-.request-id { justify-self: start; font-size: 11.5px; word-break: break-all; }
 .explain-summary { margin: 8px 0; font: 400 18px/1.45 var(--font-display); }
 .explain-points { margin: 0; padding-left: 18px; display: grid; gap: 8px; }
-.evidence-id { margin: 2px 3px 0 0; padding: 0 6px; border: 1px solid var(--line-2); border-radius: 6px; background: var(--surface-2);
-  font: 12px/1.7 var(--font-body); color: var(--ink-2); cursor: pointer; }
-.evidence-id:hover { border-color: var(--ink-3); }
 .skew-list { list-style: none; display: grid; gap: 6px; margin: 10px 0 0; padding: 0; }
 .skew-row { display: grid; grid-template-columns: 112px minmax(0, 1fr) 48px; gap: 10px; align-items: center; font-size: 13.5px; }
 .skew-bar { position: relative; height: 8px; border-radius: 4px; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); }
@@ -721,7 +713,6 @@ body[data-view="plan"] .frame-top { background: transparent; border-color: trans
 .market { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
 .market h4 { margin: 0; font-size: 15px; }
 .loves-line { margin: 6px 0 0; }
-.caveats { display: grid; gap: 6px; margin: 0; padding-left: 18px; color: var(--ink-2); }
 
 /* Why this recommendation? */
 .dialog.dialog-wide { width: min(780px, calc(100% - 24px)); }  /* two classes: wins over .dialog, declared below */
@@ -735,14 +726,9 @@ body[data-view="plan"] .frame-top { background: transparent; border-color: trans
 .why-step .table-wrap { margin-top: 8px; }
 .calc { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2);
   font: 13px/1.55 ui-monospace, SFMono-Regular, Consolas, monospace; color: var(--ink); }
-.why-cites, .why-sources { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 14px; }
-.why-cites h3, .why-sources h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 15px; }
+.why-cites { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 14px; }
+.why-cites h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 15px; }
 .why-cites blockquote { margin: 6px 0; padding: 8px 12px; border-left: 3px solid var(--llm-line); background: var(--llm-bg); border-radius: 0 8px 8px 0; }
-.why-sources ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; color: var(--ink-2); }
-.why-sources code { font-size: 12px; word-break: break-all; }
-.evidence-dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 14px; margin: 14px 0 0; font-size: 14px; }
-.evidence-dl dt { color: var(--ink-3); }
-.evidence-dl dd { margin: 0; overflow-wrap: anywhere; }
 
 /* ---------------------------------------------------------------- dialog */
 .dialog { width: min(560px, calc(100% - 24px)); max-height: min(720px, calc(100% - 40px)); padding: 0; border: 0;
@@ -777,7 +763,6 @@ body[data-view="plan"] .frame-top { background: transparent; border-color: trans
   :root[data-theme="dark"] .logo .logo-mark path { fill: var(--ink-3); }  /* the nav's logo, not the report's */
   :root[data-theme="dark"] ::selection { background: #ededed; color: #0a0a0a; }
   :root[data-theme="dark"] .thumb-fallback { background: linear-gradient(135deg, #5c5c5c, #242424); }
-  :root[data-theme="dark"] .aggregate-dot { box-shadow: 0 0 0 4px rgba(255, 255, 255, .14); }
   :root[data-theme="dark"] .metric-option:has(input:checked) { box-shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 0 0 1px var(--line-2); }
   :root[data-theme="dark"] .src-llm:not(.report-sheet *) { border-style: dashed; }  /* the paper stays as printed */
   :root[data-theme="dark"] .map-canvas .map-outlines path { filter: drop-shadow(0 0 1px #000) drop-shadow(0 0 1px #000); }

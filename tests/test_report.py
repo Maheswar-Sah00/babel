@@ -19,12 +19,7 @@ from test_track_web import LOW_CONTRAST, luminance
 from test_web import FakeAgent, Site, browser, expect, expect_text, wait_zoom  # noqa: F401
 
 GROUPS = ["translate_game", "store_page_only", "skip"]
-QLOO_NOTE = "Qloo describes the combined taste of many fans, never individual players, and it doesn't guarantee sales."
 ESTIMATE_NOTE = "Costs and shares are estimates, not quotes or sales."
-# babel/plan.py CAVEATS the report words plainly (the small-indie result is said by its track record line)
-PLAIN_CAVEATS = {"Shares are estimates": "not sales, wishlists or player counts",
-                 "The baseline comes from": "miss players who only buy translated games",
-                 "Costs are estimates": "Costs are estimates from per-word rates you can edit, not quotes."}
 MAPDATA = "async ([name, ...args]) => { const m = await import('/static/mapdata.js'); return m[name](...args); }"
 HATCH, DIV_STRONG_BLUE, NOT_COUNTED = "url(#report-map-hatch)", "#1c5cab", "#eceeed"
 NO_OVERFLOW = "document.documentElement.scrollWidth <= window.innerWidth"
@@ -57,8 +52,8 @@ def group_names(report, group):
 def test_the_report_has_the_inputs_the_plan_the_evidence_and_the_limits(browser):
     with Site(browser) as s:
         page = s.plan()
-        plan_id = re.search(r"babel-plan-(\w+)\.json", page.locator("#plan-download").get_attribute("download"))[1]
         report = open_report(page)
+        plan_id = re.search(r"Plan ID\s*(\w+)", report.inner_text())[1]
         expect(page.locator("#report-title")).to_be_focused()
         expect(page.locator("#report-title")).to_have_text("Test Game")
         r = synthetic.result()
@@ -95,46 +90,32 @@ def test_the_report_has_the_inputs_the_plan_the_evidence_and_the_limits(browser)
         versus = {v["code"]: v for v in r["explore"]["versus_generic"]["rows"]}
         ru = versus["russian"]
         russian = report.locator('tr[data-lang="russian"] .r-why')
-        expect_text(russian, f"The usual share: {pct(ru['baseline_share'])}, 1st (5th on the usual list).")
-        assert (ru["baseline_rank"], ru["generic_rank"], ru["babel_rank"]) == (1, 5, 1)
-        expect_text(russian, "so it stays 1st.")
+        assert (ru["generic_rank"], ru["babel_rank"]) == (5, 1)
+        expect(russian).to_have_text("Babel ranks it 1st (usual list: 5th).")
         expect(russian).to_have_attribute("title", ru["why"])
-        expect_text(report.locator('tr[data-lang="french"] .r-why'), "didn't fit; the store page tests this market")
+        expect_text(report.locator('tr[data-lang="french"] .r-why'), "is over budget.")
         thai = report.locator('tr[data-lang="thai"] .r-why')
         assert p["languages"][-1]["estimated_share"] < p["allocation"]["min_share"]
         expect(thai).to_have_text(f"Too few likely players: under {pct(p['allocation']['min_share'])}.")
         expect(thai).to_have_attribute("title", p["languages"][-1]["reason"])
 
-        # evidence: comparable games with their Qloo status, the explanation (labelled), market notes
+        # evidence: comparable games with their Qloo status, the explanation (no author label), market notes
         looks = report.locator(".r-looks")
         expect(looks.locator(".badge", has_text="Used: real Qloo fan data")).to_have_count(3)
         expect_text(looks.locator("li", has_text="Ghost Game"), "Not used: Qloo has no real data")
         expect_text(looks.locator("li", has_text="Lost Game"), "Not used: Qloo doesn't know it")
         explain = report.locator(".r-explain")
-        expect_text(explain.locator(".src"), "Claude")
+        expect(report.locator(".src")).to_have_count(0)
         expect_text(explain, r["explanation"]["summary"])
         markets = report.locator(".r-markets")
         expect_text(markets, "Russian → Russia")
         expect_text(markets, "Film Alpha · Film Beta")
-        expect_text(markets.locator(".r-llm"), r["market_notes"]["markets"][0]["note"]["text"])
+        expect(markets.locator(".r-llm")).to_have_count(0)
         expect_text(markets.locator(".r-audience"), "24 and younger +0.31")
 
-        # limits, the permanent Qloo note, provenance
-        limits = report.locator(".r-limits")
-        for caveat in p["uncertainty"]["caveats"]:  # each one, in plain words or (if unknown) as the server sent it
-            if caveat.startswith("On small English-only indie games"):
-                continue  # a note about the test, not this plan: the Track record has it
-            plain = next((v for k, v in PLAIN_CAVEATS.items() if caveat.startswith(k)), caveat)
-            expect_text(limits, plain)
-        expect(limits).not_to_contain_text("rule out luck")
-        steam = p["track_record"]["steam_reviews"]
-        wiki = p["track_record"]["wikipedia_pageviews"]
-        expect_text(limits, f"on {wiki['test_games']} well-known games, Babel's top 3 languages reached "
-                            f"{pct(wiki['babel_top3_coverage'])} of the real non-English audience")
-        expect_text(limits, f"On {steam['test_games']} small indie games, they reached "
-                            f"{pct(steam['babel_top3_coverage'])} of non-English reviews")
-        expect_text(limits, QLOO_NOTE)
-        expect_text(limits, ESTIMATE_NOTE)
+        # the estimate note and provenance, in the footer
+        expect(report.locator(".r-limits")).to_have_count(0)
+        expect_text(report.locator(".r-foot"), ESTIMATE_NOTE)
         expect_text(report.locator(".r-foot"), f"plan {plan_id}")
         expect_text(report.locator(".r-foot"), "Qloo world heatmaps (urn:heatmap) of the look-alike games")
         text = report.inner_text()
@@ -211,8 +192,7 @@ def test_print_shows_only_the_report_on_one_a4_page(browser):
         adjust = page.locator(".r-group-row th").first.evaluate(
             "e => getComputedStyle(e).printColorAdjust || getComputedStyle(e).webkitPrintColorAdjust")
         assert adjust == "exact"  # colour chips and backgrounds print
-        assert float(page.locator(".report-sheet").get_attribute("data-fit")) >= 0.9  # no visible shrinking
-        assert pdf_pages(page.pdf(format="A4")) == 1
+        assert 1 <= pdf_pages(page.pdf(format="A4")) <= 2  # readable type, at most two pages
         page.emulate_media(media="screen")
         expect(page.locator(".report-toolbar")).to_be_visible()
         assert s.errors == []
@@ -250,7 +230,7 @@ def test_the_dark_theme_darkens_the_surroundings_and_keeps_the_paper_light(brows
         page.emulate_media(media="print")
         assert page.evaluate(PAPER) == printed
         assert page.evaluate("getComputedStyle(document.body).backgroundColor") == "rgb(255, 255, 255)"
-        assert pdf_pages(page.pdf(format="A4")) == 1
+        assert 1 <= pdf_pages(page.pdf(format="A4")) <= 2
         assert s.errors == []
 
 
@@ -292,7 +272,6 @@ def test_a_plan_without_qloo_fan_maps(browser):
         expect_text(report.locator(".r-map"), "The plan on the world map")
         expect_text(report.locator(".r-legend"), "Translate the game")
         expect_text(report.locator(".r-looks"), "Not used: Qloo has no real data")
-        expect_text(report.locator(".r-limits"), "No Qloo fan data for games like this")
         expect_text(report.locator(".r-markets"), "Market notes were not requested for this plan.")
         assert s.errors == []
 
@@ -305,7 +284,7 @@ def test_phone_width_has_no_sideways_scrolling(browser):
         assert page.evaluate(NO_OVERFLOW)
         page.locator(".r-foot").scroll_into_view_if_needed()
         assert page.evaluate(NO_OVERFLOW)
-        assert pdf_pages(page.pdf(format="A4")) == 1  # the printed page keeps the A4 layout
+        assert 1 <= pdf_pages(page.pdf(format="A4")) <= 2  # the printed pages keep the A4 layout
         assert s.errors == []
 
 
@@ -338,7 +317,6 @@ def test_the_webfishing_report_fits_one_page(browser, monkeypatch):
         expect(report.locator('tbody[data-group="store_page_only"] tr[data-lang]')).to_have_count(11)
         expect_text(report.locator(".r-inputs"), "$7,996")
         expect(report.locator(".r-looks li")).to_have_count(6)
-        assert pdf_pages(page.pdf(format="A4")) == 1
-        assert float(report.locator(".report-sheet").get_attribute("data-fit")) >= 0.9
+        assert 1 <= pdf_pages(page.pdf(format="A4")) <= 2
         assert errors == []
         context.close()

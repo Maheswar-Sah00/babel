@@ -254,7 +254,7 @@ def test_a_failed_or_unavailable_claude_falls_back_to_the_template(env, monkeypa
     monkeypatch.setattr(llm, "ask_claude_json", broken)
     out = run(env, tags=COZY)
     exp = out["result"]["explanation"]
-    assert exp["kind"] == "template" and "Claude unavailable" in exp["reason"]
+    assert exp["kind"] == "template" and "LLM unavailable" in exp["reason"]
     assert events(out, "error", "explain") and out["status"] == "partial"
     idx = out["result"]["evidence_index"]
     assert all(not explain.unsupported(pt["text"], [idx[e] for e in pt["evidence"]]) for pt in exp["points"])

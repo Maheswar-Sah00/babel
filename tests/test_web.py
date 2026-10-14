@@ -275,9 +275,7 @@ def test_enter_a_game_swap_a_comparable_set_budget_and_watch_it_run(browser):
         assert states[0] == ["goal", "done"] and [s for s, _ in states[1:]] == STEPS
         assert dict(states)["lookalikes"] == "warning" and dict(states)["verify"] == "done"
         assert "null" not in page.locator("#view-plan").inner_text()
-        assert page.locator("#raw-events li").count() >= 14
-        # method notes stay out of the plain checklist, one click away in the detailed list
-        expect_text(page.locator("#raw-events"), "Method: typical language mix × Qloo lift")
+        assert page.locator("#raw-events").count() == 0  # no raw step log on screen
         assert "typical language mix" not in page.locator("#checklist").text_content()
         page.get_by_role("button", name="See every step").click()  # the trace is still there
         expect(page.locator("#view-working")).to_be_visible()
@@ -484,6 +482,7 @@ def test_selecting_a_language_highlights_its_markets(browser):
         expect(page.locator("#panel-title")).to_have_text("Mexico")
         assert page.locator("path.country.is-dim").count() == 0
         # the same from the plan's language cards
+        page.locator('summary[aria-label="More about Russian"]').click()  # the reason and buttons sit behind "+"
         page.get_by_role("button", name="Show Russian on the map").click()
         expect(page.locator("#panel-title")).to_have_text("Russian")
         assert page.locator("path.outline-highlight").count() == 3
@@ -686,27 +685,20 @@ def test_why_this_recommendation_shows_every_value_and_step(browser):
         page = s.plan()
         r = synthetic.result()
         ru = r["explore"]["map"]["languages"]["russian"]
+        page.locator('summary[aria-label="More about Russian"]').click()  # the reason and buttons sit behind "+"
         why = page.get_by_role("button", name="Why this recommendation for Russian?")
         why.click()
         dialog = page.locator("#why-dialog")
         expect_text(dialog, f"The usual share: {ru['baseline_share'] * 100:.1f}%")
         expect_text(dialog, "Qloo adjustment: ")
-        expect_text(dialog, f"= ×{ru['lift']:.3f}")  # the exact lift, one click away
-        expect_text(dialog, f"Mean S1 {ru['mean_s1']:.3f} ÷ reference {ru['reference_s1']:.3f}")
-        expect_text(dialog.locator("tbody"), "0.800")  # Alpha Farm's affinity in Russia, from the map data
-        expect_text(dialog, f"= {ru['baseline_x_lift']:.5f}; ÷ {r['explore']['map']['baseline_x_lift_sum']:.5f}")
-        expect_text(dialog, "(30,000 game words + 500 store-page words) × $0.10 per word = $3,050.00")
-        expect_text(dialog, "= $3,507.50")
+        expect_text(dialog, "Cost: $3,508 for the whole game")
         expect_text(dialog, "Budget decision: Translate the game")
-        expect_text(dialog, r["explore"]["map"]["lookalikes"][0]["request"])  # the cached Qloo response behind it
-        expect_text(dialog, "Russian has the highest estimated share")  # Claude's point citing lang:russian
+        expect_text(dialog, "Russian has the highest estimated share")  # the explanation's point citing lang:russian
+        assert dialog.locator("details").count() == 0  # no "exact numbers" or sources sections
         page.keyboard.press("Escape")
         expect(dialog).to_be_hidden()
         expect(why).to_be_focused()
-        page.locator('.evidence-id[data-id="lang:russian"]', has_text="Russian").click()
-        expect_text(dialog, "estimated share")
-        expect_text(dialog.locator("#why-title"), "Evidence: Russian")
-        expect_text(dialog, "(ID lang:russian)")
+        assert page.locator(".evidence-id").count() == 0  # no evidence tags after the explanation's points
 
 
 def test_babel_vs_the_generic_list(browser):
@@ -716,7 +708,7 @@ def test_babel_vs_the_generic_list(browser):
         expect(rows).to_have_count(14)
         expect_text(rows.first, "Russian")
         expect_text(rows.first, "▲ 4")
-        expect_text(rows.first, "(5th on the usual list)")
+        expect(rows.first).to_contain_text(re.compile(r"(stays|up to) 1st\."))
         expect_text(page.locator("#versus-about"),
                     "The usual list starts with Simplified Chinese, Japanese and Korean")
 
@@ -937,6 +929,7 @@ def test_browser_to_the_real_backend(browser, monkeypatch):
         page.locator("#country-search").fill("Japan")
         page.locator("#country-search").press("Enter")
         expect_text(page.locator("#map-panel"), "A Hat in Time")
+        page.locator('summary[aria-label="More about Russian"]').click()  # the reason and buttons sit behind "+"
         page.get_by_role("button", name="Why this recommendation for Russian?").click()
         expect_text(page.locator("#why-dialog"), "Kazakhstan")
         page.keyboard.press("Escape")

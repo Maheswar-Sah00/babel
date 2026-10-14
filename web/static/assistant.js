@@ -21,11 +21,11 @@ const PAGE = [".skip-link", "#ready-banner", ".frame-top", "main", ".footer"];  
 const GUARDED = ".map-controls button, .plan-actions .button";  // the launcher never sits on these
 const KEYS = "Enter to send · Shift+Enter for a new line";
 const VIEWS = ["start", "working", "plan", "track", "report"];
-const LABELS = {  // kind "fallback": Babel's code wrote it; checked false: Claude's answer failed the number check
-  checked: ["is-checked", "Written by Claude · numbers checked against Babel's data"],
-  unchecked: ["is-unchecked", "Written by Claude · numbers not checked against Babel's data"],
-  fallback: ["is-fallback", "Written by Babel's code, not by Claude"],
-  replaced: ["is-fallback", "Written by Babel's code, not by Claude · Claude's numbers couldn't be verified"],
+const LABELS = {  // kind "fallback": Babel's code wrote it; checked false: the LLM's answer failed the number check
+  checked: ["is-checked", "Numbers checked against Babel's data"],
+  unchecked: ["is-unchecked", "Numbers not checked against Babel's data"],
+  fallback: ["is-fallback", "Written by Babel's code"],
+  replaced: ["is-fallback", "Written by Babel's code · the first answer's numbers couldn't be verified"],
 };
 const ICON = { pending: "…", ok: "✓", failed: "✗", skipped: "–", dropped: "!", info: "→" };
 const SPOKEN = { pending: "Doing", ok: "Done", failed: "Failed", skipped: "Skipped", dropped: "Not done",
@@ -507,7 +507,7 @@ function build() {
     h("p", { text: "I can also use the app for you: plan a game, change the budget, show a country or language on the "
       + "map, open the report." }),
     h("p", { class: "asst-welcome-note", text: "Numbers come from Babel's code and Qloo data, not from the AI. Each "
-      + "answer says whether Claude wrote it and whether its numbers were checked." }));
+      + "answer says whether its numbers were checked." }));
   const log = h("ol", { class: "asst-log" });
   const scroll = h("div", { class: "asst-scroll", role: "region", tabindex: "0", "aria-label": "Conversation" },
     welcome, log);

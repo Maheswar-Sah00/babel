@@ -1,8 +1,7 @@
 // The Track record screen (TASK 11): the pre-registered backtest from GET /track-record, which the server recomputes
 // from the frozen files in backtest/data (with their SHA-256). It leads with how much of the real non-English audience
 // Babel's top 3 languages reached against the usual list, on both measures; then what Qloo adds (the Wikipedia test);
-// a game-by-game explorer; how the test worked (collapsed); and where every number comes from. Every number comes from
-// the server; this file selects and formats. Text is always inserted as text, never as HTML.
+// a game-by-game explorer; and how the test worked (collapsed). Every number comes from the server; this file selects and formats. Text is always inserted as text, never as HTML.
 
 import { $, $$, api, errorText, fmtInt, h, listText } from "./ui.js";
 
@@ -50,11 +49,6 @@ function reach(tr) {
 function usualFirst(tr) {
   const label = Object.fromEntries(tr.languages.map((l) => [l.code, l.label]));
   return listText(tr.generic_ranking.slice(0, 3).map((c) => label[c]));
-}
-
-/** "The exact numbers" and the like: detail kept one click away. */
-function more(label, ...body) {
-  return h("details", { class: "tr-more" }, h("summary", { text: label }), h("div", { class: "tr-more-body" }, ...body));
 }
 
 function chip(text, cls = "src-ref") {
@@ -123,7 +117,7 @@ function render() {
   $("#track-sub").textContent = `We tested Babel on ${plural(games, "real game")} released since 2023. The rules were `
     + "written down before any result was seen, and two independent measures showed where non-English players "
     + "really turned up: Wikipedia page views and Steam reviews.";
-  $("#track-body").replaceChildren(results(d), qloo(d), explorer(), method(d), sources(d));
+  $("#track-body").replaceChildren(results(d), qloo(d), explorer(), method(d));
   renderExplorer();
 }
 
@@ -367,8 +361,9 @@ function gameDetail(tr, g) {
               r <= 3 ? h("span", { class: "visually-hidden", text: " (top 3)" }) : null);
           }));
       })))),
-    h("p", { class: "help", text: "#1 = first pick; filled = in the top 3. Real share = this game's share of "
-      + `${tr.observed_unit}. The usual list is the same for every game.` }),
+    h("p", { class: "help", text: "How to read it: #1 is the language a list would translate first, and highlighted "
+      + `ranks are its top 3. Real share is how this game's ${tr.observed_unit} split across the languages. The `
+      + "usual list does not change from game to game." }),
     lookalikeNote(g),
   ].filter(Boolean);
 }
@@ -383,8 +378,9 @@ function lookalikeNote(g) {
     return h("p", { class: "help", text: "This game had no Steam tags in the test data, so it was matched to the same "
       + `games as the other untagged games: ${names}. Babel now requires games like yours to share a Steam tag.` });
   }
-  return h("p", { class: "help", text: `Games like it whose Qloo fan maps Babel read: ${listText(g.lookalikes.map((x) =>
-    `${x.name} (tag match ${x.overlap.toFixed(2)})`))}. They were matched on Steam tags; rare tags count more.` });
+  return h("p", { class: "help", text: "To rank languages for this game, Babel looked at where Qloo says fans of these "
+    + `similar games are: ${listText(g.lookalikes.map((x) => `${x.name} (tag match ${x.overlap.toFixed(2)} out of 1)`))}`
+    + ". Similar means they share Steam tags with this game; a rare tag counts for more than a common one." });
 }
 
 // ---------------------------------------------------------------- how the test worked (collapsed)
@@ -423,23 +419,4 @@ function method(d) {
             + `Qloo's own addition was small (${pts(sx.mean_difference)} points vs the starting point) and not `
             + `statistically significant (${pKept(sx.sign_test_p)}).` }),
           h("p", { "data-note": "not-sales", text: "Both measures are signs of demand, not sales." })))));
-}
-
-// ---------------------------------------------------------------- sources
-function sources(d) {
-  const files = [...d.sources, { file: d.report.file, sha256: d.report.sha256, reported: true }];
-  return h("section", { class: "panel-card tr-sources", "aria-labelledby": "tr-sources-title" },
-    h("div", { class: "tr-sources-text" },
-      h("p", { class: "eyebrow tr-eyebrow", text: "Check it yourself" }),
-      h("h2", { id: "tr-sources-title", class: "tr-sources-title", text: "Where every number comes from" }),
-      h("p", { class: "tr-about", text: "The server recomputes these results from the frozen test files. The few "
-        + "figures that need unpublished Qloo data are read from the published report, marked “Reported”. Each "
-        + "file's SHA-256 fingerprint lets anyone check they have the same data." })),
-    h("div", { class: "tr-sources-files" },
-      more(`The ${plural(files.length, "file")} and their SHA-256 fingerprints`,
-        h("ul", { class: "tr-files" }, files.map((f) => h("li", {}, h("code", { class: "tr-file", text: f.file }),
-          f.reported ? chip("Reported", "src-report") : null,
-          h("code", { class: "tr-hash", text: f.sha256 }))))),
-      h("p", { class: "help" }, "Raw data: ", h("a", { class: "link", href: "/track-record", target: "_blank",
-        rel: "noopener", text: "GET /track-record" }), " (JSON). The rules: backtest/PREREGISTRATION.md.")));
 }

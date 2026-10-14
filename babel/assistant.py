@@ -42,7 +42,7 @@ SIMPLE_LABEL = {"open_report": "Open the report", "open_track_record": "Open the
                 "go_start": "Go to the Start screen"}
 NO_PLAN = "No plan is open yet."
 GONE = "The open plan is no longer on this server: run it again."
-UNAVAILABLE = ("The assistant needs Claude, which isn't available right now. Every button and screen in Babel still "
+UNAVAILABLE = ("The assistant needs the LLM, which isn't available right now. Every button and screen in Babel still "
                "works.")
 NO_ANSWER = "I couldn't produce an answer to that. Try asking another way; every button in Babel still works."
 UNVERIFIED = "I couldn't answer that from this plan's evidence without quoting numbers I can't verify."
@@ -129,7 +129,7 @@ def product_facts():
                        "come from editable per-word rates, store page words and QA overhead. An exact optimiser picks "
                        "the full translations that cover the most estimated demand within the budget, then store "
                        "pages with what is left; languages under the demand threshold are skipped. Every number comes "
-                       "from code; Claude only reads game descriptions and writes explanations, which code checks.",
+                       "from code; an LLM only reads game descriptions and writes explanations, which code checks.",
         "product:screens": "Start: enter the game and check or swap its look-alike games. Working: the agent's live "
                            "step-by-step trace. Plan: the groups with costs, a budget slider that re-fits the plan, a "
                            "world map with four views, a 'why' dialog per language with the full calculation, Babel vs "
@@ -274,7 +274,7 @@ def plan_context(body, budget):
                                                                    for r in vs["rows"]}}
     exp = result.get("explanation")
     if exp and not refit:
-        idx["explanation"] = {"written by": "Claude, checked against the evidence" if exp["kind"] == "llm_text" else
+        idx["explanation"] = {"written by": "an LLM, checked against the evidence" if exp["kind"] == "llm_text" else
                               "code, from the evidence", "summary": exp["summary"],
                               "points": [pt["text"] for pt in exp["points"]]}
     return idx

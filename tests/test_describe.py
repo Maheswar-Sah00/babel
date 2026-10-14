@@ -165,7 +165,7 @@ def test_a_complete_plan_from_text_alone(monkeypatch, picker):
     assert p["status"] == "ok" and p["game"]["source"] == "description"
     assert [x["name"] for x in p["lookalikes"]["used"]][:2] == ["Farm Valley", "Cozy Town"]
     assert p["discovery"]["confidence"]["level"] == "high" and "lookalikes" not in p["discovery"]
-    assert any("inferred from your description by Claude" in m for m in p["messages"])
+    assert any("inferred from your description by an LLM" in m for m in p["messages"])
     json.dumps(p, allow_nan=False)
 
 

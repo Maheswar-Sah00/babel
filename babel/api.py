@@ -136,7 +136,7 @@ class PlanRequest(BaseModel):
     lookalikes: Optional[list[Annotated[int, Field(strict=True)]]] = Field(
         None, max_length=10, description="Steam app IDs of look-alike games")
     markets: bool = Field(True, description="Add market notes (Qloo audience and local favourites)")
-    explain: bool = Field(True, description="Add Claude's explanation, checked against the evidence")
+    explain: bool = Field(True, description="Add a plain-words explanation, checked against the evidence")
 
     @model_validator(mode="after")
     def one_game(self):
@@ -653,7 +653,7 @@ def create_app(settings=None, runner=run_agent, loader=load_context, lookup=None
             return error(504, "timeout", "Looking up the game took too long; try again.", request)
         except Exception:  # Steam / Qloo after retries, or Claude: logged here, a plain message for the client
             log.exception("look-up failed %s", request.state.request_id)
-            return error(502, "upstream_error", "The game could not be looked up right now (Steam, Qloo or Claude "
+            return error(502, "upstream_error", "The game could not be looked up right now (Steam, Qloo or the LLM "
                                                 "did not answer); try again in a minute.", request)
 
     @app.post("/lookalikes", response_model=Suggestions, tags=["start"],

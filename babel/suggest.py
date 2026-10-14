@@ -65,9 +65,6 @@ def suggest(ctx, appid=None, name=None, description=None):
                              "Check that it is your game.")
         game = P.game_info(appid)
         if len(game["tags"]) < SPARSE_TAGS and not describe.description_problem(game.get("description")):
-            n = len(game["tags"])
-            notes.append(f"Steam lists only {n} tag{'' if n == 1 else 's'} for this game, so Claude read its store "
-                         "description and suggested tags instead.")
             discovery = describe.discover(game["description"], picker)
     else:
         discovery = describe.discover(description, picker)

@@ -162,9 +162,8 @@ def test_every_dark_screen_is_monochrome(browser):
         page.get_by_role("button", name="Back to the plan").click()
         page.get_by_role("button", name="See every step").click()
         expect(page.locator("#view-working")).to_be_visible()
-        page.locator("details.raw").evaluate("(d) => { d.open = true; }")
         scan("working")
-        page.get_by_role("link", name="Track record").first.click()
+        page.evaluate("document.querySelector('[data-action=\"track\"]').click()")  # as the assistant opens it
         page.locator(".tr-verdict").first.wait_for()
         page.locator(".tr-example").last.click()
         page.evaluate("document.querySelectorAll('#view-track details').forEach((d) => { d.open = true; })")
@@ -230,10 +229,8 @@ def test_dark_greys_are_true_greys_and_cues_replace_hue(browser):
         assert css("#theme-toggle", "outlineColor") == "rgb(245, 245, 245)"
         page.locator("#theme-toggle").blur()
         s.plan()
-        assert css(".src-llm", "borderTopStyle") == "dashed"
         assert css(".src-qloo", "borderTopStyle") == "solid"
         page.get_by_role("button", name="Export report").click()
-        assert css(".report-sheet .src-llm", "borderTopStyle") == "solid"  # the paper stays as printed
         assert s.errors == []
 
 
@@ -249,6 +246,6 @@ def test_the_light_theme_is_unchanged(browser):
         assert css(".evidence-card .link", "textDecorationLine") == "none"
         assert css(".logo-mark path", "fill") == "rgb(45, 108, 243)"
         page = s.plan()
-        assert css(".src-llm", "borderTopStyle") == "solid"
+        assert css(".src-qloo", "borderTopStyle") == "solid"
         assert css(".src-qloo", "backgroundColor") == "rgb(234, 241, 254)"
         assert s.errors == []

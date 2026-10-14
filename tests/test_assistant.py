@@ -321,7 +321,7 @@ def test_claude_unavailable_gives_a_fallback_with_no_actions(claude, error, capl
         out = ask("Show me Japan please, my secret plan is Zebra-42")
     assert out == {"reply": assistant.UNAVAILABLE, "kind": "fallback", "checked": True, "actions": [],
                    "dropped_actions": [], "sources": []}
-    assert "Claude" in out["reply"] and "still works" in out["reply"]
+    assert "LLM" in out["reply"] and "still works" in out["reply"]
     assert type(error).__name__ in caplog.text and "Zebra" not in caplog.text
 
 

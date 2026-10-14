@@ -45,13 +45,7 @@ body[data-view="track"] .frame-top { background: transparent; border-color: tran
 .tr-about { max-width: 52rem; margin: 10px 0 0; color: var(--ink-2); }
 .tr-tag { display: inline-block; margin-left: 8px; padding: 0 7px; border-radius: 999px; font: 600 11px/1.7 var(--font-body);
   background: var(--surface-2); border: 1px solid var(--line); color: var(--ink-3); white-space: nowrap; vertical-align: middle; }
-.src-report { background: var(--src-ref-bg); color: var(--ink-2); border-color: var(--line-2); }
 .tr-p { font: 400 .86em/1.4 var(--font-body); color: var(--ink-3); }
-.tr-more { margin: 0; }
-.tr-more > summary { width: fit-content; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--blue-ink); }
-.tr-more > summary:hover { text-decoration: underline; }
-.tr-more[open] > summary { margin-bottom: 8px; }
-.tr-more-body { font-size: 14px; color: var(--ink-2); }
 
 /* loading and failed */
 .tr-state { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 22px 24px; border-radius: var(--radius);
@@ -206,21 +200,10 @@ body[data-view="track"] .frame-top { background: transparent; border-color: tran
   font-size: 14px; color: var(--ink-2); }
 .tr-how-notes p { margin: 0; }
 
-/* sources */
-.tr-sources { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px 40px; align-items: start;
-  padding: 24px 28px; }
-.tr-sources-title { margin: 0; font: 400 clamp(1.35rem, 2vw, 1.6rem)/1.15 var(--font-display); letter-spacing: -0.02em; }
-.tr-sources .tr-about { font-size: 14.5px; }
-.tr-sources-files { display: grid; gap: 10px; padding-top: 4px; }
-.tr-sources-files .help { margin: 0; }
-.tr-files { display: grid; gap: 8px; margin: 4px 0 0; padding: 0; list-style: none; }
-.tr-files li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
-.tr-file { font-weight: 600; }
-.tr-hash { flex-basis: 100%; font-size: 11.5px; color: var(--ink-3); word-break: break-all; background: none; border: 0; padding: 0; }
 
 /* responsive */
 @media (max-width: 1020px) {
-  .tr-verdicts, .tr-qloo, .tr-games-body, .tr-defs, .tr-sources { grid-template-columns: minmax(0, 1fr); }
+  .tr-verdicts, .tr-qloo, .tr-games-body, .tr-defs { grid-template-columns: minmax(0, 1fr); }
   .tr-game-list { max-height: 300px; }
 }
 @media (max-width: 680px) {
@@ -251,7 +234,6 @@ body[data-view="track"] .frame-top { background: transparent; border-color: tran
   .tr-rank { min-width: 0; padding: 1px 5px; }
   .tr-how > summary { padding: 18px 16px; }
   .tr-how-body { padding: 4px 16px 18px; }
-  .tr-sources { padding: 20px 16px; }
 }
 @media (forced-colors: active) {
   .tr-btw-seg, .tr-compare-fill, .tr-share-fill, .tr-rank.is-top { forced-color-adjust: none; }

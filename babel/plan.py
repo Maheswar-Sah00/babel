@@ -534,7 +534,7 @@ def plan(word_count, budget, appid=None, name=None, lookalikes=None, tags=None, 
 
 def discovery_notes(d):
     """Plain notes about how look-alikes were found from a description, and what to do when evidence is weak."""
-    notes = [f"Tags and candidate look-alikes were inferred from your description by Claude, then checked against "
+    notes = [f"Tags and candidate look-alikes were inferred from your description by an LLM, then checked against "
              f"Steam and Qloo. Look-alike confidence: {d['confidence']['level']}."]
     if d["needs_user_choice"]:
         hint = ", ".join(f"{a['name']} ({a['appid']})" for a in d["alternatives"][:4])

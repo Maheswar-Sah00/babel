@@ -391,7 +391,7 @@ def test_the_dark_theme_keeps_every_figure_readable(browser):
         page.evaluate(OPEN_ALL)
         cards = page.locator("#view-track .panel-card").evaluate_all(
             "els => els.map((e) => getComputedStyle(e).backgroundColor)")
-        assert len(cards) >= 6 and all(luminance(c) < 0.02 for c in cards)
+        assert len(cards) >= 5 and all(luminance(c) < 0.02 for c in cards)
         assert page.evaluate(LOW_CONTRAST, "#view-track") == []
         marks = page.evaluate(MARK_CONTRAST, ".tr-compare-fill, .tr-btw-seg, .tr-share-fill")
         assert len(marks) >= 20 and [m for m in marks if m[1] < 3] == []
@@ -412,6 +412,6 @@ def test_the_track_record_does_not_wait_for_the_runtime_data(browser):
         expect(page.locator(".tr-verdict")).to_have_count(2)
         page.get_by_role("button", name="Back", exact=True).click()
         expect(page.locator("#view-start")).to_be_visible()
-        page.locator('a[data-action="track"]').last.click()  # opening it again keeps the loaded screen
+        page.locator('a[data-action="track"]').click()  # opening it again keeps the loaded screen
         expect(page.locator("#track-title")).to_be_focused()
         expect(page.locator(".tr-verdict")).to_have_count(2)

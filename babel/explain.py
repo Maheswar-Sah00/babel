@@ -83,7 +83,7 @@ def evidence_index(p, notes=None):
         d = p["discovery"]
         idx["discovery"] = {"inferred tags": d["inferred_tags"], "confidence": d["confidence"]["level"],
                             "reasons": d["confidence"]["reasons"],
-                            "source": "Tags inferred from a description by Claude"}
+                            "source": "Tags inferred from a description by an LLM"}
     if notes:
         a = notes["audience"]
         idx["audience"] = ({"age skew": {x["band"]: f"{x['skew']:+.2f}" for x in a["age"]},
@@ -119,7 +119,7 @@ def unsupported(text, items):
 def check(raw, idx):
     """(summary or None, kept points, dropped points with reasons) from Claude's raw answer."""
     if not isinstance(raw, dict) or not raw:
-        return None, [], [{"text": "", "reason": "Claude gave no usable answer."}]
+        return None, [], [{"text": "", "reason": "The LLM gave no usable answer."}]
     kept, dropped = [], []
     for pt in raw.get("points") if isinstance(raw.get("points"), list) else []:
         text = pt.get("text") if isinstance(pt, dict) and isinstance(pt.get("text"), str) else ""
@@ -182,7 +182,7 @@ def explain(p, idx):
     try:
         raw = llm.ask_claude_json(prompt(idx), SCHEMA)
     except Exception as exc:  # no key, network, API error: report it and fall back
-        raw, error = None, f"Claude unavailable ({type(exc).__name__})"
+        raw, error = None, f"LLM unavailable ({type(exc).__name__})"
     summary, kept, dropped = check(raw, idx)
     if error:
         dropped = []  # nothing came back to drop; the error itself is reported
@@ -190,9 +190,9 @@ def explain(p, idx):
         return {"kind": "llm_text", "status": "ok", "reason": None, "summary": summary, "points": kept,
                 "dropped": dropped, "source": f"Claude ({llm.CLAUDE_MODEL}), from the evidence index; every number "
                                               "checked against the cited evidence"}
-    reason = error or ("Claude gave no usable answer" if not isinstance(raw, dict) or not raw else
-                       "Claude's summary did not pass the checks" if not summary else
-                       f"only {len(kept)} of Claude's points passed the checks")
+    reason = error or ("the LLM gave no usable answer" if not isinstance(raw, dict) or not raw else
+                       "its summary did not pass the checks" if not summary else
+                       f"only {len(kept)} of its points passed the checks")
     summary, points = template(p, idx)
     return {"kind": "template", "status": "fallback", "reason": reason, "summary": summary, "points": points,
             "dropped": dropped, "source": "Written by code from the evidence index"}

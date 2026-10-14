@@ -187,7 +187,7 @@ class _Run:
                                                  "few to find similar games reliably.", detail="Tags from SteamSpy.")
             if not describe.description_problem(game.get("description")):
                 self.notes.append(f"SteamSpy had only {len(game['tags'])} tag(s), so tags were inferred from the store "
-                                  "description by Claude.")
+                                  "description by an LLM.")
                 looks = self.discover(game, game["description"], "the store description")
             else:
                 t.emit("reflect", "tags", "needs_input", "There is no store description to read tags from either. "
@@ -204,16 +204,16 @@ class _Run:
 
     def discover(self, game, text, source, as_game=False):
         t = self.t
-        t.emit("act", "tags", "started", f"Claude is reading {source} and suggesting Steam tags and similar games; "
+        t.emit("act", "tags", "started", f"An LLM is reading {source} and suggesting Steam tags and similar games; "
                                          "Babel checks each one on Steam and Qloo.")
         try:
             d = describe.discover(text, self.ctx.picker)
         except RuntimeError as e:
             self.failed("tags", e)
             return []
-        except Exception as e:  # Claude unavailable (no key, API error): report it, never invent tags
-            self.notes.append(f"Claude could not read {source}, so no tags or look-alikes were inferred.")
-            t.emit("error", "tags", "failed", f"Claude couldn't read {source}, so Babel has no tags or similar games "
+        except Exception as e:  # the LLM unavailable (no key, API error): report it, never invent tags
+            self.notes.append(f"The LLM could not read {source}, so no tags or look-alikes were inferred.")
+            t.emit("error", "tags", "failed", f"The LLM couldn't read {source}, so Babel has no tags or similar games "
                                               "to work from.", detail=type(e).__name__)
             return []
         looks, self.discovery, self.widened = d.pop("lookalikes"), d, d["widened_search"]
@@ -222,14 +222,14 @@ class _Run:
             game.update(name="Your game (from a description)", source="description")
         named, shown = d["named_by_claude"], ", ".join(d["inferred_tags"][:6])
         more = ", ..." if len(d["inferred_tags"]) > 6 else ""
-        t.emit("act", "tags", "ok", f"Claude suggested {_n(len(d['inferred_tags']), 'tag')} ({shown}{more}) and named "
+        t.emit("act", "tags", "ok", f"The LLM suggested {_n(len(d['inferred_tags']), 'tag')} ({shown}{more}) and named "
                                     f"{_n(len(named), 'similar game')}: {sum(r['in_pool'] for r in named)} of them are "
                                     "among the well-known games Babel compares with, "
                                     f"{sum(r['status'] == 'valid' for r in named)} with real Qloo fan data.",
                inferred_tags=d["inferred_tags"], unknown_tags=d["unknown_tags"],
                named=[{k: r[k] for k in ("claude_name", "status", "appid")} for r in named])
         if d["problems"]:
-            t.emit("reflect", "tags", "warning", "Part of Claude's answer couldn't be used: " + " ".join(d["problems"]))
+            t.emit("reflect", "tags", "warning", "Part of the LLM's answer couldn't be used: " + " ".join(d["problems"]))
         conf = d["confidence"]
         if d["needs_user_choice"]:
             hint = ", ".join(a["name"] for a in d["alternatives"][:4])
@@ -411,8 +411,8 @@ class _Run:
 
     def explain(self, p, idx):
         t = self.t
-        t.emit("act", "explain", "started", "Asking Claude to explain the plan in plain words, using only the plan's "
-                                            f"own facts ({len(idx)} of them). Babel checks every number Claude writes.",
+        t.emit("act", "explain", "started", "Writing a plain-words explanation of the plan, using only the plan's "
+                                            f"own facts ({len(idx)} of them). Babel checks every number in it.",
                detail="Each point must cite evidence IDs; every number is checked against the cited items.")
         exp = explain.explain(p, idx)
         for d in exp["dropped"]:
@@ -421,7 +421,7 @@ class _Run:
         if exp["status"] != "ok":
             t.emit("error" if "unavailable" in exp["reason"] else "reflect", "explain",
                    "failed" if "unavailable" in exp["reason"] else "warning",
-                   f"Claude's explanation wasn't used ({exp['reason']}), so Babel wrote a simpler one from the same "
+                   f"The first explanation wasn't usable ({exp['reason']}), so Babel wrote a simpler one from the same "
                    "facts.")
         t.emit("explain", "explain", "ok", exp["summary"], kind=exp["kind"], points=exp["points"],
                source=exp["source"])
@@ -429,21 +429,20 @@ class _Run:
 
     def verify(self, p, exp, idx, geo=None):
         c = p["costs"]
-        by = "by Claude" if exp and exp["kind"] == "llm_text" else "written by Babel"
         checks = [
             (c["total"] <= c["budget"] + 1e-6, f"Stays within your budget: ${c['total']:,.0f} of ${c['budget']:,.0f}.",
              None),
             (sorted(l for ls in p["groups"].values() for l in ls) == sorted(P.LANGS),
              "Each language is in exactly one group.", None),
             (P.build_plan(*self.args) == p, "Worked the plan out again from the same inputs: same result.", None),
-            (True, "Babel's code worked out every share, cost and budget choice. Claude only suggested tags and similar "
+            (True, "Babel's code worked out every share, cost and budget choice. An LLM only suggested tags and similar "
                    "games and wrote text.", "Every score, cost and budget decision came from babel.plan."),
         ]
         if exp:
             grounded = all(pt["evidence"] and all(e in idx for e in pt["evidence"])
                            and not explain.unsupported(pt["text"], [idx[e] for e in pt["evidence"]])
                            for pt in exp["points"])
-            checks.append((grounded, f"Explanation ({by}): all {len(exp['points'])} points rest on the plan's facts and "
+            checks.append((grounded, f"Explanation: all {len(exp['points'])} points rest on the plan's facts and "
                                      f"use only numbers found there; {len(exp['dropped'])} left out by these checks.",
                            f"Explanation kind {exp['kind']}: every point cites existing evidence IDs and quotes only "
                            "numbers found in them."))

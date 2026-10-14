@@ -76,8 +76,9 @@ def test_the_full_journey_for_webfishing(site):
     page.get_by_role("button", name="Back to $10,000").click()
     expect(page.locator("#plan-title")).to_have_text("Translate Russian and Spanish.", timeout=SLOW)
     # evidence
+    page.locator('summary[aria-label="More about Russian"]').click()  # the reason and buttons sit behind "+"
     page.get_by_role("button", name="Why this recommendation for Russian?").click()
-    expect(page.locator("#why-dialog")).to_contain_text("Mean S1", timeout=SLOW)
+    expect(page.locator("#why-dialog")).to_contain_text("Qloo adjustment", timeout=SLOW)
     page.keyboard.press("Escape")
     expect(page.locator("#evidence-grid")).to_contain_text("Not used: Qloo has no real data", timeout=SLOW)
     # report export
@@ -90,7 +91,7 @@ def test_the_full_journey_for_webfishing(site):
     page.get_by_role("button", name="Back to the plan").click()
     expect(page.locator("#view-plan")).to_be_visible(timeout=SLOW)
     # track record
-    page.get_by_role("link", name="Track record").first.click()
+    page.evaluate("document.querySelector('[data-action=\"track\"]').click()")  # as the assistant opens it
     expect(page.locator("#view-track")).to_be_visible(timeout=SLOW)
     expect(page.locator("#track-title")).to_be_focused(timeout=SLOW)
     assert errors == []

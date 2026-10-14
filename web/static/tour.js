@@ -54,14 +54,12 @@ const STEPS = [
       + "appeared the moment Babel finished that step.",
     note: () => `On the plan, ${label("#plan-trace", "See every step")} brings you back here.` },
   { id: "headline", target: ".plan-head-text", prepare: toPlan, title: "Your plan in one line",
-    body: "The headline says which languages to translate and what that costs (an estimate). The labels under it say "
-      + "how many games like yours with Qloo data stand behind the plan, and who wrote its explanation." },
+    body: "The headline says which languages to translate and what that costs (an estimate). The label under it says "
+      + "how many games like yours with Qloo data stand behind the plan." },
   { id: "map", target: [".explore-head", ".explore-toolbar", "#map-canvas"], prepare: showWorld,
     title: "Where the fans are",
     body: () => "The map colours each country using Qloo's fan maps of games like yours. Switch views above it: "
-      + `${views()}.`,
-    note: "The note at the top always stays: Qloo shows the combined taste of many fans, never individual players, "
-      + "and it can't promise sales." },
+      + `${views()}.` },
   { id: "country", target: "#map-panel", prepare: () => perform({ type: "show_country", country: "JP" }),
     title: "One country: Japan",
     body: "Pick any country on the map or in the list. The panel shows Qloo's data for it, game by game, and the "
@@ -74,7 +72,7 @@ const STEPS = [
     title: "Three groups, one budget",
     body: () => `Babel sorts the languages into ${GROUP_LABEL.translate_game}, ${GROUP_LABEL.store_page_only} and `
       + `${GROUP_LABEL.skip}. Move the budget and Babel picks the best mix that fits it again, with no new Qloo or `
-      + "Claude calls." },
+      + "LLM calls." },
   { id: "why", target: "#why-dialog", prepare: openWhy, leave: closeWhy, title: "Why this recommendation?",
     body: "Why? shows how Babel got there for any language: the usual share, the Qloo adjustment from each game like "
       + "yours, the share of likely players, the cost and the budget decision. The sources, with Qloo's request IDs, are "
@@ -88,8 +86,7 @@ const STEPS = [
     "#evidence-grid > .evidence-card-item:nth-child(-n+2)"],
     prepare: toPlan, title: "What this plan is based on",
     body: "Every game like yours is listed with what Qloo knows about it; games without real fan data are shown but "
-      + "never used. The explanation says who wrote it: Claude, citing this evidence, with every number checked by "
-      + "Babel's code." },
+      + "never used." },
   { id: "report", target: [".report-toolbar", "#view-report .r-head", "#view-report .r-inputs"],
     prepare: () => perform({ type: "open_report" }), title: "Export report",
     body: () => `${label("#plan-export", "Export report")} turns your plan into one printable page with the same numbers, `

@@ -146,7 +146,7 @@
         <label class="check"><input type="checkbox" id="opt-markets" checked> Notes on your top markets: who the fans
           are, and the films and music they also like there (Qloo data)</label>
         <label class="check"><input type="checkbox" id="opt-explain" checked> A short explanation in plain English
-          (written by Claude; Babel checks every number in it)</label>
+          (Babel checks every number in it)</label>
       </fieldset>
       <div class="controls-actions">
         <button id="run-button" class="button button-primary button-large" type="submit">Run the plan</button>
@@ -170,7 +170,7 @@
         games usually see, then uses Qloo's fan maps to lean toward the languages that fans of games like yours
         speak.</p></li>
       <li><span class="how-num">3</span><h3>Fit your budget</h3><p>Babel picks the best mix that fits your budget:
-        full translations first, then store pages. Babel's code works out every number; Claude only reads
+        full translations first, then store pages. Babel's code works out every number; an LLM only reads
         descriptions and explains the plan.</p></li>
     </ol>
   </section>
@@ -194,10 +194,6 @@
             <p id="run-live" class="visually-hidden" aria-live="polite"></p>
           </div>
           <div id="run-outcome" class="outcome" hidden tabindex="-1"></div>
-          <details class="raw">
-            <summary>Every step, in detail</summary>
-            <ol id="raw-events" class="raw-list"></ol>
-          </details>
         </div>
       </section>
 
@@ -215,7 +211,6 @@
               <button type="button" id="plan-change" class="button button-primary">Change the inputs</button>
               <button type="button" id="plan-trace" class="button button-secondary">See every step</button>
               <button type="button" id="plan-export" class="button button-secondary">Export report</button>
-              <a id="plan-download" class="button button-secondary" href="#" download="babel-plan.json">Download the data (JSON)</a>
             </div>
           </header>
           <div id="plan-alerts" class="notes"></div>
@@ -226,8 +221,6 @@
                 <p class="eyebrow">Qloo's fan maps of games like yours</p>
                 <h2 id="explore-title" class="section-title">Where fans of games like yours are</h2>
               </div>
-              <p class="aggregate-note" title="Qloo measures aggregate cultural affinity, not individual preferences or guaranteed sales."><span class="aggregate-dot" aria-hidden="true"></span>Qloo shows the
-                combined taste of many fans, not what any one player likes, and it can't promise sales.</p>
             </div>
             <div class="explore-toolbar">
               <fieldset id="metric-switch" class="metric-switch">
@@ -279,15 +272,12 @@
                   <label for="plan-budget">Budget</label>
                   <div class="input-with-unit unit-before"><span aria-hidden="true">$</span><input id="plan-budget"
                     type="number" inputmode="decimal" min="0" max="10000000" step="100"
-                    aria-describedby="budget-help budget-status"></div>
-                  <input id="plan-budget-range" type="range" min="0" step="100" aria-label="Budget slider"
-                         aria-describedby="budget-help">
+                    aria-describedby="budget-status"></div>
+                  <input id="plan-budget-range" type="range" min="0" step="100" aria-label="Budget slider">
                 </div>
                 <dl id="budget-stats" class="budget-stats"></dl>
               </div>
             </div>
-            <p id="budget-help" class="help">Move the budget and Babel picks the best mix that fits it again, from the
-              same scores (no new Qloo or Claude lookups). Costs are estimates, not quotes.</p>
             <p id="budget-status" class="budget-status" role="status"></p>
             <div id="plan-groups" class="plan-groups"></div>
             <p id="plan-supported" class="muted"></p>
@@ -329,10 +319,6 @@
 
   <footer class="footer">
     <span>Babel</span>
-    <nav class="footer-links" aria-label="More">
-      <a href="#track" data-action="track">Track record</a>
-      <a href="/docs" target="_blank" rel="noopener">API docs</a>
-    </nav>
   </footer>
 
   <!-- ============================================================ Why dialog -->

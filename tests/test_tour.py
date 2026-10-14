@@ -144,7 +144,6 @@ def test_the_tour_walks_the_whole_product_over_the_real_ui(browser):
                 assert len(s.agent.calls) == 1 and info["view"] == "working"
                 states = page.locator("#checklist .step").evaluate_all("els => els.map((e) => e.dataset.state)")
                 assert states.count("done") >= 7 and not {"running", "pending", "failed"} & set(states)
-                assert page.locator("#raw-events li").count() >= 13
             elif step == "headline":
                 expect(page.locator("#plan-title")).to_have_text(re.compile(r"^Translate "))
             elif step == "country":

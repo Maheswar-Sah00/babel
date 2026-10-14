@@ -1,6 +1,6 @@
 """The top navigation in a real browser: exactly the logo, How it works, Take the tour, Ask AI agent, GitHub, the theme
-switch and Plan a game; each one works from any screen; phones keep the essentials; the Track record and the API
-docs stay one click away in the footer. Needs: python -m playwright install chromium
+switch and Plan a game; each one works from any screen; phones keep the essentials; the footer has no links.
+Needs: python -m playwright install chromium
 """
 import pytest
 
@@ -33,16 +33,13 @@ def test_ask_ai_agent_opens_the_assistant_and_points_at_its_launcher(browser):
         assert not s.errors
 
 
-def test_how_it_works_and_the_footer_links_work_from_the_plan(browser):
+def test_how_it_works_works_from_the_plan_and_the_footer_has_no_links(browser):
     with Site(browser, viewport=(1280, 900)) as s:
         page = s.plan()
         page.get_by_role("link", name="How it works").click()
         expect(page.locator("body")).to_have_attribute("data-view", "start")
         expect(page.locator("#how")).to_be_in_viewport()
-        footer = page.locator("footer")
-        expect(footer.get_by_role("link", name="API docs")).to_have_attribute("href", "/docs")
-        footer.get_by_role("link", name="Track record").click()
-        expect(page.locator("body")).to_have_attribute("data-view", "track")
+        expect(page.locator("footer a")).to_have_count(0)
         assert not s.errors
 
 

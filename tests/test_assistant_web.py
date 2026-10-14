@@ -20,8 +20,8 @@ from test_web import FakeAgent, FakeLookup, Site, browser, group_names  # noqa: 
 playwright_api = pytest.importorskip("playwright.sync_api")
 expect = playwright_api.expect
 NO_OVERFLOW = "document.documentElement.scrollWidth <= window.innerWidth"
-CHECKED = "Written by Claude · numbers checked against Babel's data"
-FALLBACK = "Written by Babel's code, not by Claude"
+CHECKED = "Numbers checked against Babel's data"
+FALLBACK = "Written by Babel's code"
 REPLACED = "I couldn't answer that from this plan's evidence without quoting numbers I can't verify."
 NO_PLAN = {"view": "start", "plan_id": None, "budget": None, "metric": None, "country": None, "language": None,
            "lookalike": None}
@@ -346,7 +346,7 @@ def test_run_plan_from_the_start_screen_starts_a_live_run(browser, viewport):
 def test_code_written_replies_are_labelled_as_such_in_the_tablet_drawer(browser):
     with Site(browser, viewport=(1024, 800)) as s:
         page = s.page
-        unavailable = ("The assistant needs Claude, which isn't available right now. Every button and screen in Babel "
+        unavailable = ("The assistant needs the LLM, which isn't available right now. Every button and screen in Babel "
                        "still works.")
         Stub(s, reply(unavailable, kind="fallback", checked=True, sources=()),
              reply(REPLACED, kind="fallback", checked=False, sources=("product:limits",),  # actions may still come
@@ -367,7 +367,7 @@ def test_code_written_replies_are_labelled_as_such_in_the_tablet_drawer(browser)
         page.get_by_role("button", name="Open the chat").click()
         second = page.locator(".asst-msg.is-assistant").nth(1)
         expect(second.locator(".asst-label-text")).to_have_text(
-            f"{FALLBACK} · Claude's numbers couldn't be verified")
+            f"{FALLBACK} · the first answer's numbers couldn't be verified")
         expect(second.locator(".asst-source")).to_have_text(["product:limits"])
         expect(receipts(second)).to_have_text(["✓ Open the track record"])
         assert page.locator("#assistant-panel a").count() == 0  # evidence chips are not links

@@ -225,8 +225,8 @@ function renderSetup() {
   const s = state.suggestions;
   const g = s.game;
   const source = { steam_tags: "Games like it were matched on Steam tags; rare tags count more.",
-    store_description: "Claude suggested tags from its store description; Babel checked them on Steam and Qloo.",
-    description: "Claude read your description and suggested tags and similar games; Babel checked each one on Steam and Qloo.",
+    store_description: "An LLM suggested tags from its store description; Babel checked them on Steam and Qloo.",
+    description: "An LLM read your description and suggested tags and similar games; Babel checked each one on Steam and Qloo.",
   }[s.source];
   const langs = (g.supported_languages || []).map((l) => LANG[l] || l);
   $("#game-summary").replaceChildren(
@@ -456,11 +456,8 @@ function renderChecklist() {
 function onEvent(name, data) {
   const run = state.run;
   if (!run || run.closed) return;
-  if (name === "meta") { run.planId = data.plan_id; run.cache = data.cache; logRaw(`meta · plan ${data.plan_id} · cache ${data.cache}`); return; }
-  if (name === "result") { run.result = data; logRaw(`result · ${data.status}`); return; }
-  // the detailed log keeps the method notes (data.detail) that the plain checklist leaves out
-  logRaw(`${data.seq} · ${data.type} · ${data.step} · ${data.status} · ${data.message}`
-    + (data.data?.detail ? ` · Method: ${data.data.detail}` : ""));
+  if (name === "meta") { run.planId = data.plan_id; run.cache = data.cache; return; }
+  if (name === "result") { run.result = data; return; }
   if (data.type === "error") run.errors.push(data);
   if (data.type === "plan") {
     run.rows.clear();
@@ -494,10 +491,6 @@ function onEvent(name, data) {
   renderChecklist();
 }
 
-function logRaw(text) {
-  $("#raw-events").append(h("li", { text }));
-}
-
 async function startRun(body) {
   state.run?.controller.abort();
   const controller = new AbortController();
@@ -508,7 +501,6 @@ async function startRun(body) {
   $("#working-title").textContent = `Planning ${gameName}`;
   $("#working-meta").textContent = [`${fmtInt.format(body.word_count)} words`, `${fmtUsd.format(body.budget)} budget`,
     state.chosen.length ? `compared with ${state.chosen.map((c) => short(c.name)).join(", ")}` : "no similar games"].join(" · ");
-  $("#raw-events").replaceChildren();
   $("#run-outcome").hidden = true;
   $("#cancel-button").hidden = false;
   $("#cancel-button").disabled = false;
