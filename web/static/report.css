@@ -59,7 +59,7 @@ body[data-view="report"] .frame-top { background: transparent; border-color: tra
 /* header */
 .r-head { padding-bottom: 10px; border-bottom: 1px solid var(--line); }
 .r-brand { display: flex; align-items: center; gap: 6px; font-size: var(--fs-s); color: var(--ink-3); }
-.r-logo { width: 16px; height: 16px; }
+.r-logo { width: 22px; height: 22px; object-fit: contain; }
 .r-brand-name { font-weight: 600; color: var(--ink); letter-spacing: -0.01em; }
 .r-brand-doc { margin-left: auto; text-transform: uppercase; letter-spacing: .06em; font-size: var(--fs-xs); font-weight: 600; }
 .r-head-main { display: grid; grid-template-columns: minmax(0, 1fr) 240px; gap: 10px 24px; align-items: end; margin-top: 4px; }

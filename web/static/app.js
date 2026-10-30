@@ -239,16 +239,8 @@ function renderSetup() {
       h("div", { class: "tags", "aria-label": "Steam tags" }, (g.top_tags || []).slice(0, 8).map((t) => h("span", { class: "tag", text: t })))));
 
   const notes = s.notes.map((n) => h("p", { class: "note", text: n }));
-  if (s.confidence && s.confidence.level !== "high") {
-    // the server's reasons (the same ones the plan's evidence keeps) one click away
-    const low = s.confidence.level === "low";
-    notes.push(h("div", { class: low ? "note" : "note is-info" },
-      h("p", { class: "note-lead", text: low
-        ? "Babel isn't sure these games are like yours. Check them, and swap any that don't fit."
-        : "Check these games: Babel is fairly sure, but not certain, that they are like yours." }),
-      s.confidence.reasons.length ? h("details", { class: "note-details" },
-        h("summary", { text: low ? "Why Babel isn't sure" : "Why only fairly sure" }),
-        h("ul", {}, s.confidence.reasons.map((r) => h("li", { text: r })))) : null));
+  if (s.confidence?.level === "low") {
+    notes.push(h("p", { class: "note", text: "Babel isn't sure these games are like yours. Check them, and swap any that don't fit." }));
   }
   if (s.widened_search) notes.push(h("p", { class: "note is-info", text: "Few of the closest matches had Qloo fan data, so Babel also looked at less similar games." }));
   $("#setup-notes").replaceChildren(...notes);

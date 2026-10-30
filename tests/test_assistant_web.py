@@ -148,7 +148,7 @@ def test_a_reply_is_rendered_as_text_with_its_label_and_the_request_follows_the_
 
         ask(page, "And the evidence?")  # the history goes along; replies are text, never HTML
         expect(page.locator(".asst-text").nth(1)).to_have_text('<img src=x onerror="window.pwned = 1">Not <b>bold</b>.')
-        assert page.locator("#assistant-panel img, #assistant-panel b").count() == 0
+        assert page.locator("#assistant-panel img:not(.asst-mark), #assistant-panel b").count() == 0
         assert page.evaluate("window.pwned") is None
         first = "Babel turns Qloo fan maps of look-alike games into a costed translation plan."
         assert stub.bodies[1]["messages"] == [{"role": "user", "text": "What does Babel do?"},
@@ -537,8 +537,7 @@ def test_the_dark_theme_keeps_the_launcher_and_every_message_readable(browser):
         css = lambda sel, prop: page.locator(sel).first.evaluate(f"e => getComputedStyle(e).{prop}")  # noqa: E731
         disc = css("#assistant-launcher", "backgroundColor")
         assert luminance(disc) > 0.7
-        assert contrast(css("#assistant-launcher .asst-mark", "fill"), disc) >= 4.5
-        assert contrast(css("#assistant-launcher .asst-mark path", "fill"), disc) >= 3
+        assert page.locator("#assistant-launcher .asst-mark").evaluate("e => e.naturalWidth") > 0  # the logo image
         assert contrast(css(".asst-ai", "color"), css(".asst-ai", "backgroundColor")) >= 4.5
         Stub(s, reply("I'll change the budget, then show Japan.", actions=[
             {"type": "set_budget", "budget": 5000, "label": "Set the budget to $5,000"},

@@ -158,8 +158,7 @@ body[data-view="working"] .frame-top { background: transparent; border-color: tr
 @media screen { :root[data-theme="dark"] .nav { --nav-pill: #161616; --nav-hover: #262626; } }
 .logo { display: inline-flex; align-items: center; gap: 9px; text-decoration: none; font-weight: 650; font-size: 21px;
   letter-spacing: -0.02em; justify-self: start; border-radius: 10px; }
-.logo-mark { flex: none; width: 26px; height: 26px; fill: var(--ink); transition: transform .25s ease; }
-.logo-mark path { fill: var(--blue); }
+.logo-mark { flex: none; width: 34px; height: 34px; object-fit: contain; transition: transform .25s ease; }
 .logo:hover .logo-mark { transform: translateY(-1px) rotate(-4deg); }
 .nav-links { display: flex; align-items: center; gap: 2px; padding: 4px; border: 1px solid var(--line); border-radius: 999px;
   background: var(--nav-pill); }
@@ -205,6 +204,7 @@ body:has(.nav-ask:hover, .nav-ask:focus-visible) .asst-launcher { outline: 3px s
   :root[data-theme="dark"] .evidence-dot { background: radial-gradient(circle at 35% 35%, #ffffff, #7a7a7a); }
   :root[data-theme="dark"] .strip-tab:not(:hover, [aria-pressed="true"]) { color: #8c8c8c; }
   :root[data-theme="dark"] .pin { box-shadow: 0 1px 3px rgba(0, 0, 0, .5); }
+  :root[data-theme="dark"] .streets-note { box-shadow: 0 0 0 1px var(--map-ring), 0 1px 3px rgba(0, 0, 0, .5); }
 }
 .band::before { content: ""; position: absolute; inset: 0 0 auto; height: 70px; z-index: -1;
   background: linear-gradient(var(--surface), transparent); }
@@ -272,10 +272,6 @@ body:has(.nav-ask:hover, .nav-ask:focus-visible) .asst-launcher { outline: 3px s
 .notes { display: grid; gap: 8px; margin-bottom: 14px; }
 .note { margin: 0; padding: 10px 14px; border-radius: var(--radius-s); font-size: 14px; background: var(--warn-soft); color: var(--warn); }
 .note.is-info { background: var(--blue-soft); color: var(--blue-ink); }
-.note-lead { margin: 0; }
-.note-details { margin-top: 6px; }
-.note-details summary { cursor: pointer; font-weight: 500; }
-.note-details ul { margin: 6px 0 0; padding-left: 18px; }
 
 .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
 .card { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line);
@@ -760,7 +756,6 @@ body[data-view="plan"] .frame-top { background: transparent; border-color: trans
   :root[data-theme="dark"] :is(.link, .link-button) { text-decoration: underline 1px rgba(245, 245, 245, .38);
     text-underline-offset: 3px; }
   :root[data-theme="dark"] :is(.link, .link-button):hover { text-decoration-color: currentColor; }
-  :root[data-theme="dark"] .logo .logo-mark path { fill: var(--ink-3); }  /* the nav's logo, not the report's */
   :root[data-theme="dark"] ::selection { background: #ededed; color: #0a0a0a; }
   :root[data-theme="dark"] .thumb-fallback { background: linear-gradient(135deg, #5c5c5c, #242424); }
   :root[data-theme="dark"] .metric-option:has(input:checked) { box-shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 0 0 1px var(--line-2); }
@@ -844,6 +839,7 @@ body[data-view="plan"] .frame-top { background: transparent; border-color: trans
 }
 @media (max-width: 360px) {
   .logo span { display: none; }  /* the mark alone; the link keeps its name, "Babel home" */
+  .logo-mark { width: 28px; height: 28px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important;

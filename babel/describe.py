@@ -30,10 +30,10 @@ SCHEMA = {
         "genres": {"type": "array", "items": {"type": "string"}},
     },
 }
-RULE = ("First the pool games both sources support (named by Claude and among the 12 best IDF-weighted tag matches "
+RULE = ("First the pool games both sources support (named by the LLM and among the 12 best IDF-weighted tag matches "
         "for the inferred tags), then the 6 best tag matches (the backtested rule), each by tag overlap; the first 3 "
         "with a real Qloo fan map are used, and the 12 best tag matches if fewer than 2. A candidate must share at "
-        "least one tag. Other games Claude named are offered as alternatives.")
+        "least one tag. Other games the LLM named are offered as alternatives.")
 EXAMPLES = [
     "A cozy pixel-art farming and fishing game on a small island. Grow crops, befriend the villagers, decorate your "
     "house and catch fish at your own pace. Relaxing, no combat, single-player.",
@@ -75,7 +75,7 @@ def parse_answer(raw, vocab):
     games with reasons, genre clarity and labels. Anything else in the raw answer is ignored."""
     empty = {"tags": [], "unknown_tags": [], "named": [], "genre_clarity": "unclear", "genres": []}
     if not isinstance(raw, dict) or not raw:
-        return empty, ["Claude gave no usable answer."]
+        return empty, ["The LLM gave no usable answer."]
     problems, canonical = [], {t.casefold(): t for t in vocab}
     tags, unknown = [], []
     if not isinstance(raw.get("tags"), list):
@@ -163,7 +163,7 @@ def select(picker, tags, verified):
         widened = len(wider) > len(chosen)
         chosen, cands = (wider, wider_cands) if widened else (chosen, cands)
     records = [{"appid": a, "name": picker.names[a], "overlap": round(overlap[a], 4),
-                "source": "both" if a in agreed else "named by Claude" if a in named else "tag match",
+                "source": "both" if a in agreed else "named by the LLM" if a in named else "tag match",
                 "status": picker.status[a][0] if a in picker.status else "not checked",
                 "qloo_id": picker.status[a][1] if a in picker.status else None, "selected": a in chosen}
                for a in cands + [a for a in named if a not in cands]]
@@ -183,7 +183,7 @@ def confidence(answer, problems, n_chosen, agreement):
         reasons.append(f"The genre is {answer['genre_clarity']} from this description"
                        + (f" ({', '.join(answer['genres'])})." if answer["genres"] else "."))
     if n_chosen and not agreement:
-        reasons.append("None of the chosen look-alikes is among the games Claude named: tags and names disagree.")
+        reasons.append("None of the chosen look-alikes is among the games the LLM named: tags and names disagree.")
     weak = bool(problems) or len(answer["tags"]) < 3 or n_chosen < 2 or answer["genre_clarity"] == "unclear"
     return {"level": "low" if weak else "medium" if reasons else "high", "reasons": reasons}
 

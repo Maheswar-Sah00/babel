@@ -124,7 +124,7 @@ def test_the_switch_fits_the_nav_on_small_phones(browser, width):
         for name in ("Babel home", "Dark mode", "Plan a game"):
             box = page.get_by_role("link" if name != "Dark mode" else "button", name=name).first.bounding_box()
             assert box and box["width"] >= 24 and box["x"] + box["width"] <= width, name
-        assert page.locator(".logo-mark").bounding_box()["width"] == 26
+        assert page.locator(".logo-mark").bounding_box()["width"] == (28 if width <= 360 else 34)
 
 
 def test_storage_that_throws_still_gives_a_working_switch(browser):

@@ -306,12 +306,8 @@ def test_a_description_with_keyboard_tabs(browser):
         assert s.lookup.calls == []
         page.locator("#game-description").fill("A cozy farming game on a small island with fishing.")
         page.get_by_role("button", name="Find similar games").click()
-        notes = page.locator("#setup-notes")
-        expect_text(notes, "Babel is fairly sure, but not certain")  # the plain message first
-        reason = notes.get_by_text("The genre is mixed from this description.")
-        expect(reason).to_be_hidden()  # the server's reasons, one click away
-        notes.get_by_text("Why only fairly sure").click()
-        expect(reason).to_be_visible()
+        expect(page.locator(".card").first).to_be_visible()
+        expect(page.locator("#setup-notes")).not_to_contain_text("fairly sure")  # no notice for medium confidence
         page.get_by_role("button", name="Run the plan").click()
         expect(page.locator("#view-plan")).to_be_visible()
         assert s.agent.calls[0]["description"].startswith("A cozy farming") and s.agent.calls[0]["appid"] is None

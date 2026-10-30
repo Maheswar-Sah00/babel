@@ -244,7 +244,7 @@ def test_the_light_theme_is_unchanged(browser):
         assert css(".nav .button-primary", "color") == "rgb(255, 255, 255)"
         assert "rgba(45, 108, 243, 0.35)" in css(".nav .button-primary", "boxShadow")
         assert css(".evidence-card .link", "textDecorationLine") == "none"
-        assert css(".logo-mark path", "fill") == "rgb(45, 108, 243)"
+        assert page.locator(".logo-mark").evaluate("e => e.naturalWidth") == 256  # the logo image loaded
         page = s.plan()
         assert css(".src-qloo", "borderTopStyle") == "solid"
         assert css(".src-qloo", "backgroundColor") == "rgb(234, 241, 254)"
